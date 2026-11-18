@@ -212,6 +212,12 @@ footer .disc{color:#7d7c76}
   .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   main{padding:16px}
   .lvl{margin-left:0}
+  header.top{padding:12px 14px;gap:10px}
+  header.top>div:first-child{width:100%}
+  .lvl{width:100%;flex-wrap:wrap}
+  .who{flex-wrap:wrap}
+  .who .chip,.who button{white-space:nowrap}
+  .lvl input{flex:1 1 100%;width:auto;min-width:0;font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -219,7 +225,7 @@ footer .disc{color:#7d7c76}
 <body>
 <header class="top">
   <div>
-    <h1>副本任務規劃</h1>
+    <h1>副本任務查詢</h1>
     <div class="sub">各副本的任務在哪接、前置系列從哪個任務開始</div>
   </div>
   <div class="lvl">
