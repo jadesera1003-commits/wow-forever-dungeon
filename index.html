@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>副本任務規劃</title>
+<title>副本任務查詢</title>
 <script>const whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize: "medium"};</script>
 <script src="https://wow.zamimg.com/js/tooltips.js" async></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -132,6 +132,7 @@ main{padding:20px 24px 48px;min-width:0}
 .item.no{opacity:.55}
 .item .it{font-size:12px;color:var(--muted)}
 .item .st{margin:2px 0 0;padding:0;list-style:none;font-size:13px;line-height:1.55}
+.item .st .g{color:#1eff00}
 .item .st .pend{color:var(--muted);font-size:12px}
 .item .row{display:flex;gap:10px;align-items:flex-start}
 .item .ico{flex:0 0 auto;width:44px;height:44px;display:grid;place-items:center;border-radius:6px;border:2px solid var(--qc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--qc) 22%,#1a1d22),#101215 75%);box-shadow:0 0 0 1px #000 inset,0 0 8px color-mix(in srgb,var(--qc) 35%,transparent);color:color-mix(in srgb,var(--qc) 55%,#e8e4da)}
@@ -532,6 +533,73 @@ function lootFor(id){
   return {note:"首領順序是大概的攻略順序，新副本依掉落等級排列。", bosses: names.map(n => ({n, npc: npcIds[n] || 0, lv:"", where: n === "小怪／其他" ? "副本內小怪或稀有怪" : "", quest:null, items: groups[n]}))};
 }
 
+
+/* ===== 從 Wowhead 說明框資料讀取完整屬性（只在能連到 Wowhead 的網站上作用） ===== */
+const TT_CACHE = {};
+const TT_SKIP = /^(物品等級|拾取後綁定|裝備後綁定|耐久|售價|掉落於|唯一|僅可裝備一件|需要等級)/;
+const TT_SLOT = /^(頭部|頸部|肩部|背部|胸部|手腕|手|腰部|腿部|腳|手指|飾品|主手|副手|單手|雙手|遠程|投擲|副手物品|聖物|背包)(\s|$)/;
+function ttLines(html){
+  const box = document.createElement("div"); box.innerHTML = html;
+  const lines = []; let cur = {t:"", g:false};
+  const push = () => { const t = cur.t.replace(/\u0008/g, "").replace(/\s+/g, " ").trim(); if (t) lines.push({t, g:cur.g}); cur = {t:"", g:false}; };
+  const walk = (node, green) => {
+    node.childNodes.forEach(n => {
+      if (n.nodeType === 3){ cur.t += n.nodeValue; if (green && n.nodeValue.trim()) cur.g = true; return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName;
+      if (tag === "BR"){ push(); return; }
+      if (tag === "TR" || tag === "TABLE" || tag === "DIV"){ push(); walk(n, green || n.classList.contains("q2")); push(); return; }
+      if (tag === "TH" || tag === "TD"){ walk(n, green || n.classList.contains("q2")); cur.t += " "; return; }
+      walk(n, green || n.classList.contains("q2"));
+    });
+  };
+  walk(box, false); push();
+  return lines;
+}
+async function fetchTip(id){
+  if (TT_CACHE[id]) return TT_CACHE[id];
+  try { const c = sessionStorage.getItem("tt" + id); if (c) return (TT_CACHE[id] = JSON.parse(c)); } catch(e) {}
+  const r = await fetch("https://nether.wowhead.com/tooltip/item/" + id + "?dataEnv=16&locale=10");
+  if (!r.ok) throw new Error("http " + r.status);
+  const j = await r.json();
+  const all = ttLines(j.tooltip || "");
+  let drop = "";
+  const stats = [];
+  all.slice(1).forEach(l => {
+    const m = l.t.match(/^掉落機率[:：]\s*(.+)$/);
+    if (m){ drop = m[1]; return; }
+    if (TT_SKIP.test(l.t)) return;
+    if (TT_SLOT.test(l.t)) return;
+    if (l.t === j.name) return;
+    stats.push(l);
+  });
+  const out = {stats, drop};
+  TT_CACHE[id] = out;
+  try { sessionStorage.setItem("tt" + id, JSON.stringify(out)); } catch(e) {}
+  return out;
+}
+let ttQueue = [], ttRunning = 0;
+function queueTip(id, card, it){
+  ttQueue.push({id, card, it}); pumpTips();
+}
+function pumpTips(){
+  while (ttRunning < 4 && ttQueue.length){
+    const job = ttQueue.shift(); ttRunning++;
+    fetchTip(job.id).then(d => fillTip(job.card, job.it, d)).catch(() => {}).finally(() => { ttRunning--; pumpTips(); });
+  }
+}
+function fillTip(card, it, d){
+  if (!card.isConnected) return;
+  let ul = card.querySelector(".st");
+  if (!ul){ ul = document.createElement("ul"); ul.className = "st"; card.querySelector(".row").after(ul); }
+  ul.innerHTML = "";
+  d.stats.forEach(l => { const li = document.createElement("li"); li.textContent = l.t; if (l.g) li.className = "g"; ul.appendChild(li); });
+  if (d.drop){
+    const it2 = card.querySelector(".it");
+    if (it2 && !/掉落機率/.test(it2.textContent)) it2.textContent += "・掉落機率 " + d.drop;
+  }
+}
+
 /* ===== 畫面 ===== */
 const nav = document.getElementById("nav");
 const main = document.getElementById("main");
@@ -647,6 +715,7 @@ function addTabs(d){
 }
 
 function renderLoot(d){
+  ttQueue = [];
   main.querySelector(".cols").remove();
   const data = lootFor(d.id);
   const wrap = document.createElement("div"); wrap.className = "loot";
@@ -675,6 +744,7 @@ function renderLoot(d){
       it.stats.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
       if (it.pending){ const li = document.createElement("li"); li.className = "pend"; li.textContent = "完整屬性和掉落機率待補"; ul.appendChild(li); }
       if (it.chg){ const c = document.createElement("div"); c.className = "chg"; c.textContent = "Forever 調整：" + it.chg; r.appendChild(c); }
+      if (it.id) queueTip(it.id, r, it);
       if (!it.stats.length && !it.pending) r.querySelector(".st").remove();
       list.appendChild(r);
     });
