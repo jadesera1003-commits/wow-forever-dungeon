@@ -199,7 +199,9 @@ body[data-f="A"]{--fac:var(--alliance)}
 .skip li{font-size:13px;color:var(--muted)}
 .skip li b{color:var(--ink);font-weight:500}
 
-footer{color:var(--muted);font-size:12px;margin-top:30px;max-width:70ch}
+footer{color:var(--muted);font-size:12px;margin-top:30px;max-width:80ch}
+footer p{margin:0 0 6px}
+footer .disc{color:#7d7c76}
 
 @media (max-width:1100px){.cols{grid-template-columns:1fr}}
 @media (max-width:760px){
@@ -939,7 +941,8 @@ function prefill(p){
 
 function footer(){
   const f = document.createElement("footer");
-  f.textContent = "資料來自「任務清單」試算表與 Wowhead（2026/11/18）。物品圖示與說明框由 Wowhead 提供。「Wowhead 玩家提示」整理自 Wowhead 評論區評分最高的留言。標「（暫譯）」的是還沒有官方中文名稱的任務。";
+  f.innerHTML = '<p>資料來自 Wowhead 與玩家整理（2026/11/18）。標「（暫譯）」的是還沒有官方中文名稱的項目。</p>' +
+    '<p class="disc">本站為玩家自製的非官方工具，與暴雪娛樂（Blizzard Entertainment）無關。《魔獸世界》及相關名稱、遊戲資料的版權屬於暴雪娛樂。物品圖示與說明框由 Wowhead 提供。</p>';
   main.appendChild(f);
 }
 
