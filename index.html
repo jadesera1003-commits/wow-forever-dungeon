@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>副本任務規劃</title>
+<script>const whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize: "medium"};</script>
+<script src="https://wow.zamimg.com/js/tooltips.js" async></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 單一深色主題：像遊戲內的任務日誌。左側副本列表，右側該副本的三類任務。 */
+  --bg:#131619;
+  --panel:#1b1f24;
+  --panel-2:#22272e;
+  --line:#2e343c;
+  --ink:#ebe6da;
+  --muted:#9b9a92;
+  --horde:#c41f1f;
+  --alliance:#2f6fd6;
+  --fac:var(--horde);
+  --direct:#e8b93c;
+  --inside:#5fbfa4;
+  --chain:#d9804f;
+  --skip:#6d7079;
+  --display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--direct);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:14px 20px;border-bottom:3px solid var(--fac);background:linear-gradient(180deg,color-mix(in srgb,var(--fac) 14%,var(--bg)) 0%,var(--bg) 100%)}
+header.top h1{font-family:var(--display);font-weight:900;font-size:22px;margin:0;letter-spacing:.04em;text-wrap:balance}
+header.top .sub{color:var(--muted);font-size:13px}
+.lvl{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px}
+.lvl input{width:220px;padding:5px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.lvl .hint{color:var(--muted);font-size:12px}
+
+.wrap{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px)}
+nav.list{border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px;background:var(--panel)}
+nav.list button{all:unset;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:9px 12px;border-radius:8px;border-left:3px solid transparent}
+nav.list button:hover{background:var(--panel-2)}
+nav.list button[aria-current="true"]{background:var(--panel-2);border-left-color:var(--fac)}
+nav.list button:focus-visible{outline:2px solid var(--direct)}
+nav.list .n{font-weight:700}
+nav.list .r{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+nav.list .b{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;line-height:1.3}
+nav.list .b strong{display:block;color:var(--direct);font-size:16px}
+nav.list .fit{color:var(--inside);font-size:11px;margin-left:6px;font-weight:500}
+nav.list button.dim .n,nav.list button.dim .r{opacity:.5}
+
+main{padding:20px 24px 48px;min-width:0}
+.dhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:14px}
+.dhead h2{font-family:var(--display);font-size:28px;margin:0}
+.dhead .lr{color:var(--muted);font-variant-numeric:tabular-nums}
+
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.summary div{background:var(--panel);padding:12px 16px}
+.summary .k{font-size:12px;color:var(--muted)}
+.summary .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.summary .v small{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
+.summary .total .v{color:var(--direct)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
+.btn{cursor:pointer;padding:7px 14px;border-radius:7px;border:1px solid var(--line);background:var(--panel-2)}
+.btn:hover{border-color:var(--direct)}
+.btn.primary{background:var(--fac);border-color:var(--fac);color:#fff}
+.btn.primary:hover{filter:brightness(1.12)}
+.toast{font-size:13px;color:var(--inside)}
+
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+.col h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:16px}
+.col .desc{color:var(--muted);font-size:12px;margin:0 0 10px}
+.mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-family:var(--display);font-weight:900;font-size:14px;color:#151515}
+.c-direct .mark{background:var(--direct)}
+.c-inside .mark{background:var(--inside)}
+.c-chain .mark{background:var(--chain)}
+.cards{display:flex;flex-direction:column;gap:10px}
+.empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:8px}
+
+.q{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.c-direct .q,.q.c-direct{--c:var(--direct)}
+.c-inside .q,.q.c-inside{--c:var(--inside)}
+.c-chain .q,.q.c-chain{--c:var(--chain)}
+.q .cat{font-size:12px;font-weight:700;color:var(--c)}
+.q .qh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.q .t{display:block;font-size:16px;font-weight:700;line-height:1.35;text-wrap:balance}
+.q .en{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:1px}
+.q .lv{flex:0 0 auto;font-size:12px;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.q .lv b{color:var(--ink)}
+.q .info{display:grid;grid-template-columns:4.2em 1fr;gap:3px 10px;margin:0;font-size:13px;line-height:1.5}
+.q .info dt{color:var(--muted)}
+.q .info dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.q .info .num{font-variant-numeric:tabular-nums}
+.q .note{margin:0;font-size:13px;line-height:1.6;color:var(--ink);opacity:.85}
+.q .blk{font-size:13px;line-height:1.6;padding:8px 10px;border-radius:6px;background:var(--panel-2)}
+.q .blk .lab{display:block;font-size:12px;font-weight:700;margin-bottom:2px}
+.q .src{border:1px solid color-mix(in srgb,var(--chain) 35%,var(--line))}
+.q .src .lab{color:var(--chain)}
+.q .src .sq{font-weight:700}
+.q .src .sw{display:block;color:var(--muted)}
+.q .src .path,.q .src .warn{display:block;font-size:12px;margin-top:4px}
+.q .src .path{color:var(--muted)}
+.q .src .warn{color:#e0a15f}
+.q .tip{border:1px solid color-mix(in srgb,var(--inside) 30%,var(--line))}
+.q .tip .lab{color:var(--inside)}
+.tag{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);margin-left:4px;vertical-align:1px}
+.tabs{display:flex;gap:4px;margin:0 0 16px;border-bottom:1px solid var(--line)}
+.tabs button{all:unset;cursor:pointer;padding:8px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--fac)}
+.tabs button:focus-visible{outline:2px solid var(--direct)}
+.loot .desc{color:var(--muted);font-size:13px;margin:0 0 14px;max-width:70ch}
+.boss{margin-bottom:22px}
+.bh{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.bh .bn{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);font-family:var(--display);font-weight:900}
+.bh h3{margin:0;font-family:var(--display);font-size:19px}
+.bh .bm{color:var(--muted);font-size:13px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.item.q2{--qc:#1eff00}.item.q3{--qc:#3d8bff}.item.q4{--qc:#a335ee}
+.item .ih{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.item .in{font-weight:700;color:var(--qc)}
+.item .use{font-size:11px;white-space:nowrap;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--inside) 18%,var(--panel-2));color:var(--inside)}
+.item.no .use{background:var(--panel-2);color:var(--muted)}
+.item.no{opacity:.55}
+.item .it{font-size:12px;color:var(--muted)}
+.item .st{margin:2px 0 0;padding:0;list-style:none;font-size:13px;line-height:1.55}
+.item .st .pend{color:var(--muted);font-size:12px}
+.item .row{display:flex;gap:10px;align-items:flex-start}
+.item .ico{flex:0 0 auto;width:44px;height:44px;display:grid;place-items:center;border-radius:6px;border:2px solid var(--qc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--qc) 22%,#1a1d22),#101215 75%);box-shadow:0 0 0 1px #000 inset,0 0 8px color-mix(in srgb,var(--qc) 35%,transparent);color:color-mix(in srgb,var(--qc) 55%,#e8e4da)}
+.item .ico svg{width:28px;height:28px}
+.item .body{flex:1;min-width:0}
+.item .wh{font-size:12px;color:var(--muted);text-decoration:none;margin-top:4px}
+.item .wh:hover{color:var(--qc);text-decoration:underline}
+.item .in a{color:var(--qc);text-decoration:none}
+.item .in a:hover{text-decoration:underline}
+body.wh-on .item .ico{display:none}
+.item .in a img,.item .in a ins{vertical-align:middle;margin-right:6px}
+.item .chg{font-size:12px;color:#e0a15f;margin-top:2px}
+.who{display:flex;align-items:center;gap:8px;font-size:14px}
+.who .chip{padding:4px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line)}
+body[data-f="A"]{--fac:var(--alliance)}
+.who .chip{display:inline-flex;align-items:center;gap:6px}
+.who .chip .f{font-weight:700;color:var(--fc)}
+.who .chip .cl{font-weight:700;color:var(--cc)}
+.who .chip.h{--fc:#ff4a3d;border-color:var(--horde)}
+.who .chip.a{--fc:#5b9bff;border-color:var(--alliance)}
+.opts label .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cc,var(--fc));margin-right:7px;vertical-align:1px}
+.opts label[data-cc]{color:var(--cc)}
+.opts label[data-fc]{color:var(--fc)}
+.opts label:has(input:checked)[data-cc]{border-color:var(--cc);background:color-mix(in srgb,var(--cc) 14%,var(--panel-2))}
+.opts label:has(input:checked)[data-fc]{border-color:var(--fc);background:color-mix(in srgb,var(--fc) 16%,var(--panel-2))}
+.gate{max-width:640px;margin:40px auto;padding:24px 28px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.gate h2{font-family:var(--display);font-size:24px;margin:0 0 6px}
+.gate p{color:var(--muted);margin:0 0 18px}
+.gate fieldset{border:0;padding:0;margin:0 0 18px}
+.gate legend{font-weight:700;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{cursor:pointer;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);font-size:14px}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts label:has(input:checked){border-color:var(--direct);color:var(--direct)}
+.opts label:has(input:focus-visible){outline:2px solid var(--direct)}
+.opts label.off{opacity:.3;cursor:not-allowed}
+.gate .err{color:#e06c5f;font-size:13px;min-height:1.2em}
+.notice{font-size:13px;color:#e0a15f;margin:0 0 14px}
+.results h3{font-family:var(--display);font-size:18px;margin:18px 0 8px}
+.results .grp{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+
+.skip{margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+.skip h3{font-size:14px;margin:0 0 8px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.skip ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px 18px}
+.skip li{font-size:13px;color:var(--muted)}
+.skip li b{color:var(--ink);font-weight:500}
+
+footer{color:var(--muted);font-size:12px;margin-top:30px;max-width:70ch}
+
+@media (max-width:1100px){.cols{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .wrap{grid-template-columns:1fr}
+  nav.list{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}
+  nav.list button{flex:0 0 auto;border-left:0;border-bottom:3px solid transparent}
+  nav.list button[aria-current="true"]{border-bottom-color:var(--fac)}
+  .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  main{padding:16px}
+  .lvl{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>副本任務規劃</h1>
+    <div class="sub">各副本的任務在哪接、前置系列從哪個任務開始</div>
+  </div>
+  <div class="lvl">
+    <div class="who" id="who"></div>
+    <label for="q" class="sr">搜尋</label>
+    <input id="q" type="search" placeholder="搜尋任務或 NPC" autocomplete="off">
+  </div>
+</header>
+<div class="wrap">
+  <nav class="list" id="nav" aria-label="副本"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ===== 資料 =====
+   分類：
+   direct 直接接：找 NPC 就能接，不用先做其他任務（接了在同一趟內接續完成的也算）
+   inside 副本內：副本裡撿到、打王掉落、環境物件或 NPC 給的任務
+   chain  需要前置：要先完成其他任務才接得到（prep 寫要先做什麼）
+   skip   不計入：要打兩趟以上、沒有副本目標、或出副本後才做的後續（reason 寫原因）
+   之後擴充：在 DUNGEONS 加副本，在 QUESTS 加任務即可。 */
+const DUNGEONS = [
+  {id:"rfc",     name:"怒焰裂谷",         lr:"13–18"},
+  {id:"rfk-ruin",name:"羅德隆廢墟",       lr:"15–20"},
+  {id:"wc",      name:"哀嚎洞穴",         lr:"17–24"},
+  {id:"sfk",     name:"影牙城堡",         lr:"22–30"},
+  {id:"bfd",     name:"黑澗深淵",         lr:"24–32"},
+  {id:"dig",     name:"挖掘場：濕地",     lr:"26–31"},
+  {id:"dalaran", name:"達拉然城",         lr:"28–33"},
+  {id:"gnomer",  name:"諾姆瑞根",         lr:"29–38"},
+  {id:"rfkraul", name:"剃刀沼澤",         lr:"29–38"},
+  {id:"sm-gy",   name:"血色修道院・墓地",  lr:"30–38"},
+  {id:"sm-lib",  name:"血色修道院・圖書館",lr:"33–41"},
+  {id:"sm-all",  name:"血色修道院（各區）",lr:"30–46"},
+  {id:"drowned", name:"沉沒之城",         lr:"35–40"},
+  {id:"uld",     name:"奧達曼",           lr:"35–45"},
+  {id:"krol",    name:"克羅多克要塞",     lr:"38–45"},
+  {id:"zf",      name:"祖爾法拉克",       lr:"44–54"},
+  {id:"mara",    name:"瑪拉頓",           lr:"46–55"}
+];
+
+const QUESTS = [
+  // 怒焰裂谷
+  {d:"rfc",c:"direct",n:"試探敵人",en:"Testing an Enemy's Strength",npc:"拉哈羅",w:"雷霆崖・長者高地 (69.4, 28.8)",lv:9,xp:2150,note:"殺怒焰穴居人 ×8、怒焰薩滿 ×8"},
+  {d:"rfc",c:"chain",n:"隱藏的敵人",en:"Hidden Enemies",npc:"索爾",w:"奧格瑪・葛羅瑪許堡要塞 (32.0, 37.8)",lv:9,xp:2350,src:{q:"隱藏的敵人（第 1 步）",npc:"索爾",w:"奧格瑪・葛羅瑪許堡要塞 (32.0, 37.8)",path:"隱藏的敵人（索爾）→ 找暗影裂口的尼爾魯·火刃對話 → 本任務"},note:"殺巴札蘭、耶戈什",tip:"巴札蘭在耶戈什上方：從打塔拉加曼的地方往耶戈什走，過岩漿小橋前改走右手邊，沿牆走進最暗的地方就有路上去。"},
+  {d:"rfc",c:"direct",n:"饑餓者塔拉加曼",en:"Slaying the Beast",npc:"尼爾魯·火刃",w:"奧格瑪・暗影裂口 (49.4, 50.4)",lv:9,xp:2350,note:"帶回塔拉加曼的心臟",tip:"先把他從石橋上引開再打，他會把人擊飛進岩漿，掉下去會直接死。"},
+  {d:"rfc",c:"direct",n:"毀滅之力",en:"The Power to Destroy...",npc:"瓦里瑪薩斯",w:"幽暗城・皇家區 (56.2, 92.4)",lv:9,xp:2950,note:"從灼刃教徒／術士身上打兩本書"},
+  {d:"rfc",c:"direct",n:"歸還背包",en:"Returning the Lost Satchel",npc:"拉哈羅（先接「尋找背包」）",w:"雷霆崖・長者高地 (69.4, 28.8)",lv:9,xp:2950,note:"副本內找到瑪爾·恐怖圖騰的背包後接續，交回拉哈羅",tip:"進副本走到 T 字路口，走最近的右邊上坡；到平台後左手邊有小房間，瑪爾的屍體旁有三隻穴居人。"},
+  // 羅德隆廢墟
+  {d:"rfk-ruin",c:"direct",n:"聖光的正義",en:"Light's Justice",npc:"莫賓·光殤（暫譯）",w:"幽暗城・皇家區附近 (57.8, 89.8)",lv:15,xp:4600,note:"收集完好的肢體 ×25"},
+  {d:"rfk-ruin",c:"chain",n:"新的瘟疫（暫譯）",en:"The New Plague",npc:"西奧多·格里夫斯（暫譯）",w:"幽暗城・藥劑師區 (46.6, 71.4)",lv:16,src:{q:"A Recipe for Death（任務鏈）",npc:"NPC 待查",w:"Wowhead 尚未標出起點",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"},xp:5450,note:"從首領枯萎之牙拿劇毒菌株",tip:"做完前置任務鏈最後一步（魚人／元素）後，可以去達拉然讓達拉然召喚師殺死你，在塔倫米爾復活，順便免費開塔倫米爾的飛行點。"},
+  {d:"rfk-ruin",c:"chain",n:"拉斯梅爾之怒",en:"The Wrath of Rath'mael",npc:"亡靈衛兵克里斯托夫（暫譯）",w:"提里斯法林地・布瑞爾外 (65.2, 60.2)",lv:15,src:{q:"Rear Guard Patrol（兩段）",npc:"NPC 待查",w:"提里斯法林地",path:"要先打掉提里斯法林地的 13 級精英 Riptear",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"},xp:4600,note:"殺首領拉斯梅爾"},
+  {d:"rfk-ruin",c:"direct",n:"驚恐的請求",en:"A Frightened Request",npc:"塔比薩·織心（暫譯）",w:"銀松森林・瑟伯切爾內 (44.4, 43.0)",lv:15,xp:4600,note:"在副本內調查愛德華的失蹤",tip:"在尾王拉斯梅爾附近的墓地，找到一隻睡著的鬼魂貓就會完成。"},
+  {d:"rfk-ruin",c:"inside",n:"羅德隆紋章（暫譯）",en:"Crest of Lordaeron",npc:"物品：羅德隆紋章",w:"布喬克附近塔內地上，或最深處小神殿牆上（位置不固定）",lv:16,xp:5450,note:"交給幽暗城・盜賊區的奧蘭·斯內克威瑟 (73.4, 32.4)",tip:"進副本後往右轉約 90 度，有座塔；滑鼠移到塔上層入口右邊的牆，出現齒輪圖示就是紋章。位置隨機，沒有的話出副本重置再進去找。"},
+  {d:"rfk-ruin",c:"inside",n:"無盡的折磨",en:"Unending Torment",npc:"物品：可憎頭顱",w:"副本內掉落",lv:15,xp:5100,note:"交到幽暗城，後續在城內跑四步",tip:"男爵掉可憎頭顱。接任務後走右邊樓梯上去，到有管線和木棧道的綠色軟泥池，在 NPC Ganoosh 旁使用物品，再下樓交任務。"},
+  // 哀嚎洞穴
+  {d:"wc",c:"chain",n:"尖牙德魯伊",en:"Leaders of the Fang",npc:"納拉·蠻鬃",w:"雷霆崖・長者高地 (75.4, 31.0)",lv:12,xp:4300,src:{q:"遺忘之池",npc:"圖加·符文圖騰",w:"貧瘠之地・十字路口 (52.2, 31.8)",path:"本任務是這條任務鏈的第 6 步"},note:"收集四個毒牙領主的寶石",tip:"每個有任務的人都會掉一顆寶石。四隻都殺完後回入口找納拉雷克斯的信徒，可以開護送事件，順便拿「發光的碎片」。"},
+  {d:"wc",c:"direct",n:"毒蛇花",en:"Serpentbloom",npc:"藥劑師札瑪",w:"雷霆崖・先知之池 (23.0, 21.0)",lv:14,xp:3300,note:"採毒蛇花 ×10，不共享",tip:"副本內的毒蛇花不會重生（副本外的會），多人一起做要先分好。有草藥學可以追蹤。"},
+  {d:"wc",c:"direct",n:"變異皮革",en:"Deviate Hides",npc:"納爾派克",w:"貧瘠之地・哀嚎洞穴入口上方山洞",lv:13,xp:3100,note:"變異皮革 ×20，不共享",tip:"一趟很難拿滿 20 張。最快是打副本內水裡的變異鱷魚，重置副本重複刷。交任務的 NPC 在洞口上方岩壁的洞裡。",side:"B"},
+  {d:"wc",c:"direct",n:"清除變異者",en:"Deviate Eradication",npc:"厄布魯",w:"貧瘠之地・哀嚎洞穴入口上方山洞",lv:15,xp:4000,note:"各殺 7 隻變異怪",tip:"接任務的 NPC 在洞口「臉」的左眼裡：爬上山，依序跳到頭頂、眉毛、鼻子，再進左眼。",side:"B"},
+  {d:"wc",c:"chain",n:"智慧飲料",en:"Smart Drinks",npc:"麥伯克·米希瑞克斯",w:"貧瘠之地・棘齒城 (62.4, 37.6)",lv:13,xp:2650,src:{q:"迅猛龍角",npc:"麥伯克·米希瑞克斯",w:"貧瘠之地・棘齒城 (62.4, 37.6)"},note:"哀嚎香精 ×6，不共享",tip:"哀嚎香精打副本裡的吞噬軟泥掉落。",side:"B"},
+  {d:"wc",c:"direct",n:"港口的麻煩",en:"Trouble at the Docks",npc:"起重機操作員比戈弗茲",w:"貧瘠之地・棘齒城碼頭 (63.0, 37.4)",lv:14,xp:2650,note:"從瘋子麥格利什身上拿 99 年波爾多陳釀",tip:"瘋子麥格利什不在副本內，在副本外的洞穴裡，有 2–3 個重生點，附近有潛行的迅猛龍。",side:"B"},
+  {d:"wc",c:"inside",n:"發光的碎片",en:"The Glowing Shard",npc:"物品：發光的碎片",w:"吞噬者穆坦努斯掉落",lv:15,xp:5150,note:"先帶去棘齒城，後續交給雷霆崖的哈繆爾·符文圖騰",tip:"要先殺完尖牙德魯伊四隻、完成護送，沉睡者醒來後從地上撿碎片。之後先去棘齒城飛行點旁找斯普特瓦夫（頭上沒有問號），再去副本上方山頂找法拉·聖風。",side:"B"},
+  // 影牙城堡
+  {d:"sfk",c:"direct",n:"除掉阿魯高",en:"Arugal Must Die",npc:"達拉爾·道恩維沃爾",w:"銀松森林・瑟伯切爾 (44.2, 39.8)",lv:18,xp:8850,note:"帶回阿魯高的頭"},
+  {d:"sfk",c:"direct",n:"影牙城堡裡的亡靈哨兵",en:"Deathstalkers in Shadowfang",npc:"高級執行官哈德瑞克",w:"銀松森林・瑟伯切爾 (43.4, 40.8)",lv:18,xp:5350,note:"找到亞達曼特、文森",tip:"一位被關著，放他出來才能通過第一區；另一位一進副本就能看到，正被阿魯高折磨。"},
+  {d:"sfk",c:"direct",n:"烏爾之書",en:"The Book of Ur",npc:"看守者貝爾杜加",w:"幽暗城・藥劑師區 (53.4, 53.0)",lv:16,xp:5600,note:"從副本內取得烏爾之書",tip:"書在芬魯斯的房間，進門左手邊的書架上；被拿走後幾秒會重生。"},
+  // 黑澗深淵
+  {d:"bfd",c:"direct",n:"阿庫麥爾水晶",en:"The Essence of Aku'Mai",npc:"耶努薩克雷",w:"梣谷・佐拉姆加前哨 (11.6, 34.2)",lv:17,xp:1750,note:"藍寶石 ×20 在入口前就能採",tip:"「幫助耶努薩克雷」只是引導任務，不做也能接。藍水晶在通往副本的隧道裡，不在副本內，重生比怪快，清出一小塊區域就能連採。"},
+  {d:"bfd",c:"skip",n:"上古之神的僕從（第 1 段）",en:"Allegiance to the Old Gods",reason:"副本外任務：打黑澗潮汐祭司拿便箋，交掉才能接第 2 段"},
+  {d:"bfd",c:"chain",n:"上古之神的僕從（第 2 段）",en:"Allegiance to the Old Gods",npc:"耶努薩克雷",w:"梣谷・佐拉姆加前哨 (11.6, 34.2)",lv:17,xp:6300,src:{q:"上古之神的僕從（第 1 段）",npc:"物品：潮濕的便箋",w:"黑澗深淵副本外，黑澗潮汐祭司掉落",path:"拿到便箋交給耶努薩克雷，就能接第 2 段"},note:"殺洛古斯·傑特",tip:"洛古斯·傑特在月神殿廢墟前，π 字形大廳附近的水邊。"},
+  {d:"bfd",c:"direct",n:"廢墟之間",en:"Amongst the Ruins",npc:"耶努薩克雷",w:"梣谷・佐拉姆加前哨 (11.6, 34.2)",lv:21,xp:6550,note:"帶回深淵之核",tip:"深淵之核在尾王前那個大水池的水底中央，在通往克爾里斯的長走道下面。"},
+  {d:"bfd",c:"inside",n:"阿奎尼斯男爵",en:"Baron Aquanis",npc:"物品：奇怪的水球",w:"阿奎尼斯男爵掉落",lv:21,xp:7250,note:"交給佐拉姆加前哨的耶努薩克雷",tip:"點「廢墟之間」的深淵之核會召喚出男爵，所以兩個任務一起做。"},
+  {d:"bfd",c:"inside",n:"黑暗深淵中的惡魔",en:"Blackfathom Villainy",npc:"銀月守衛塞爾瑞德",w:"加摩拉房間旁的小凹室",lv:18,xp:7850,note:"帶回克爾里斯的頭，交給雷霆崖的巴珊娜·符文圖騰",tip:"銀月守衛塞爾瑞德躺在大海龜房間旁小房間的營火邊。也可以先在雷霆崖找巴珊娜接。"},
+  // 挖掘場：濕地
+  {d:"dig",c:"direct",n:"換換口味",en:"Changing Tastes",npc:"博斯坦",w:"奧格瑪・暗巷 (57.4, 53.4)",lv:24,xp:6950,note:"帶回灌木迅猛龍肉 ×4"},
+  {d:"dig",c:"skip",n:"龍喉傳聞",en:"Dragonmaw Rumors",reason:"引導任務，沒有副本目標，是「撬開龍喉」的前置"},
+  {d:"dig",c:"chain",n:"撬開龍喉",en:"Open the Maw",npc:"亡靈哨兵密探",w:"濕地・龍喉營地上方山丘 (51.4, 59.2)",lv:24,xp:6950,src:{q:"龍喉傳聞",npc:"薩魯克",w:"阿拉希高地・落錘堡 (74.4, 35.6)"},note:"在副本內殺龍喉部隊",tip:"出發前先到落錘堡樓梯下找薩魯克接引導任務。"},
+  {d:"dig",c:"inside",n:"長者的知識（暫譯）",en:"Elder Knowledge",npc:"物品：泰坦聖物",w:"聖物守護者掉落",lv:24,xp:1400,note:"帶去雷霆崖長者高地，後續「土靈迴響」",tip:"尾王聖物守護者掉落，交給雷霆崖的 NPC。"},
+  {d:"dig",c:"skip",n:"土靈迴響",en:"Earthen Echo",reason:"出副本後的後續，去莫高雷觀星台交任務即可"},
+  // 達拉然城
+  {d:"dalaran",c:"chain",n:"干擾之心",en:"Heart of Disruption",npc:"大法師莫德拉的影像（暫譯）",w:"奧特蘭克山脈・達拉然城外（地圖標在銀松森林 68.4, 45.4）",lv:24,xp:9400,src:{q:"喋血街頭",npc:"大法師沃迪恩·伍德格賴爾",w:"希爾斯布萊德丘陵・塔倫米爾 (61.6, 20.7)",path:"喋血街頭 → 干擾之心（本任務）→ 精明交涉"},note:"從大法師之影拿秘法微粒，交回塔倫米爾；也會給下水道鑰匙"},
+  {d:"dalaran",c:"direct",n:"墓地騎士",en:"The Grave Knight",npc:"梅莉莎拉（暫譯）",w:"希爾斯布萊德丘陵・塔倫米爾 (62.6, 20.6)",lv:24,xp:9400,note:"殺墓地騎士亞崔希斯"},
+  {d:"dalaran",c:"skip",n:"力量的泉源",en:"Source of Power",reason:"碎裂的哨兵核心 ×6 不共享，五人隊要跑 2–3 趟"},
+  {d:"dalaran",c:"direct",n:"趁機進修（暫譯）",en:"Opportunistic Education",npc:"雷克西·銅爪（暫譯）",w:"達拉然・下水道入口附近",lv:24,xp:9400,note:"書在傳送門大廳後面牆邊"},
+  // 諾姆瑞根
+  {d:"gnomer",c:"direct",n:"設備之戰",en:"Rig Wars",npc:"諾格",w:"奧格瑪・榮譽谷 (75.8, 25.2)",lv:25,xp:6550,note:"帶回設備藍圖和保險箱密碼"},
+  {d:"gnomer",c:"skip",n:"主工程師斯庫提",en:"Chief Engineer Scooty",reason:"跑腿任務，沒有副本目標"},
+  {d:"gnomer",c:"skip",n:"出發！諾姆瑞根！",en:"Gnomer-gooooone!",reason:"拿傳送器的任務，沒有副本目標"},
+  {d:"gnomer",c:"inside",n:"一團混亂",en:"A Fine Mess",npc:"克努比",w:"副本內・克努比",lv:24,xp:5800,note:"護送克努比到發條小徑出口，再去藏寶海灣交",side:"B"},
+  {d:"gnomer",c:"inside",n:"髒兮兮的戒指",en:"Grime-Encrusted Ring",npc:"物品：髒兮兮的戒指",w:"黑鐵特工掉落（約 10%）",lv:28,xp:null,xpText:"未實測",note:"掉率低，看運氣；放進超級清潔器 5200 型清洗",side:"B"},
+  {d:"gnomer",c:"inside",n:"戒指歸來",en:"Return of the Ring",npc:"清洗後的閃亮金戒指",w:"副本內・超級清潔器 5200 型",lv:28,xp:null,xpText:"未實測",note:"接在「髒兮兮的戒指」之後"},
+  {d:"gnomer",c:"skip",n:"超級清潔器5200型！",en:"The Sparklematic 5200!",reason:"可重複的清洗任務，不是一般任務"},
+  {d:"gnomer",c:"skip",n:"諾格的手藝",en:"Nogg's Ring Redo",reason:"出副本後的後續，回奧格瑪交材料"},
+  // 剃刀沼澤
+  {d:"rfkraul",c:"direct",n:"藍葉薯",en:"Blueleaf Tubers",npc:"麥伯克·米希瑞克斯",w:"貧瘠之地・棘齒城 (62.4, 37.6)",lv:20,xp:5000,note:"用箱子叫出地鼠，找出 6 個藍葉薯",side:"B"},
+  {d:"rfkraul",c:"inside",n:"進口商威利克斯",en:"Willix the Importer",npc:"進口商威利克斯",w:"副本內",lv:23,xp:7250,note:"護送他離開副本",side:"B"},
+  {d:"rfkraul",c:"direct",n:"奧爾德的報復",en:"A Vengeful Fate",npc:"奧爾德·石塔",w:"雷霆崖 (36.2, 59.8)",lv:29,xp:8500,note:"帶回卡爾加·刺肋的心臟"},
+  {d:"rfkraul",c:"direct",n:"蝙蝠的糞便",en:"Going, Going, Guano!",npc:"大藥劑師法拉尼爾",w:"幽暗城・藥劑師區 (48.4, 69.4)",lv:30,xp:null,xpText:"未實測",note:"完成後可接血色修道院的「狂熱之心」"},
+  // 血色修道院
+  {d:"sm-gy",c:"inside",n:"沃瑞爾的復仇",en:"Vorrel's Revenge",npc:"沃瑞爾·森加斯",w:"副本內",lv:25,xp:null,xpText:"未實測",note:"出副本後到奧特蘭克山脈拿婚戒，交到塔倫米爾"},
+  {d:"sm-lib",c:"chain",n:"知識試煉",en:"Test of Lore",npc:"帕科瓦·芬塔拉斯",w:"幽暗城 (57.4, 65.4)",lv:25,xp:5000,src:{q:"知識試煉",npc:"布勞格·幽魂",w:"石爪山脈 (78.6, 45.4)"},note:"在圖書館找《亡靈威脅的起源》"},
+  {d:"sm-lib",c:"direct",n:"墮落者綱要",en:"Compendium of the Fallen",npc:"聖者圖希克",w:"雷霆崖 (34.4, 47.2)",lv:28,xp:null,xpText:"未實測",note:"在圖書館拿《墮落者綱要》"},
+  {d:"sm-all",c:"chain",n:"狂熱之心",en:"Hearts of Zeal",npc:"大藥劑師法拉尼爾",w:"幽暗城・藥劑師區 (48.4, 69.4)",lv:30,xp:null,xpText:"未實測",src:{q:"蝙蝠的糞便（剃刀沼澤的副本任務）",npc:"大藥劑師法拉尼爾",w:"幽暗城・藥劑師區 (48.4, 69.4)"},note:"20 個狂熱之心，任何一區的小怪都會掉"},
+  {d:"sm-all",c:"skip",n:"深入血色修道院",en:"Into The Scarlet Monastery",reason:"要打圖書館、軍械庫、大教堂三個區，一趟做不完"},
+  // 沉沒之城
+  {d:"drowned",c:"chain",n:"沉沒之城",en:"The Drowned City",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",lv:30,xp:3150,src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → 古拉巴什古代傳說 → 定位失落之城 → 本任務"},note:"收集伊拉萊的四塊石板拓印",tip:"第 1 塊：看到水池時往左下樓梯。第 2 塊：伐塔卡左邊。第 3 塊：懼湧船長附近的骷髏嘴裡。第 4 塊：尾王 Min'loth 後面。任務文字提到的獸皮和木炭不用準備。"},
+  {d:"drowned",c:"chain",n:"好的海鱗納迦…",en:"The Only Good Brinescale...",npc:"指揮官阿格羅戈西",w:"荊棘谷・格羅姆高 (32.2, 28.8)",lv:30,xp:3550,src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → … → 水中的敵人（指揮官阿格羅戈西）→ 本任務；也要先完成肯維雷的「定位失落之城」"},note:"殺伐塔卡"},
+  {d:"drowned",c:"direct",side:"B",n:"鹽占船長",en:"The Saltseer Captain",npc:"克拉茲克",w:"荊棘谷・藏寶海灣 (27.0, 77.2)",lv:34,xp:3900,note:"殺懼湧船長和鹽占驗屍官 ×3",tip:"克拉茲克在藏寶海灣旅店頂樓，飛行點旁邊。"},
+  {d:"drowned",c:"skip",n:"被陰的鹽占海盜",en:"Shady Saltseers",reason:"巫毒灌注神器 ×10 掉率很低，5 人一趟只拿到 30/50，通常要打兩趟"},
+  {d:"drowned",c:"direct",n:"遠古古拉巴什塑像",en:"Ancient Gurubashi Idol",npc:"瑪庫可（陶土議會）",w:"莫高雷 (32.4, 20.6)",lv:30,xp:3900,note:"另給陶土議會、暗矛食人妖聲望。入口在荊棘谷暗礁海西邊 (21.5, 27.8)",tip:"打倒倒數第二王「不死骨髓」（地圖最西邊的永恆圓形劇場）後，從他身上撿塑像。"},
+  // 奧達曼
+  {d:"uld",c:"direct",n:"化解災難",en:"Solution to Doom",npc:"迷失者塞爾杜林",w:"荒蕪之地 (51.4, 76.6)",lv:30,xp:3150,note:"石板在副本入口前的矮人區，不用進副本",tip:"石板不在副本內，在入口前有矮人守衛的區域：主廳南邊、北側餐廳旁的房間中央，可點的「遠古箱子」。",side:"B"},
+  {d:"uld",c:"direct",n:"能量石",en:"Power Stones",npc:"里格弗茲",w:"荒蕪之地 (42.4, 52.8)",lv:30,xp:3500,note:"兩種能量石各 ×8",side:"B"},
+  {d:"uld",c:"direct",n:"尋找寶物",en:"Reclaimed Treasures",npc:"派翠克·加瑞特",w:"幽暗城 (62.4, 48.4)",lv:33,xp:3600,note:"取回加勒特的家族寶藏"},
+  {d:"uld",c:"direct",n:"搜尋項鏈",en:"Necklace Recovery",npc:"德蘭·杜佛斯",w:"奧格瑪 (59.4, 36.8)",lv:37,xp:2450,note:"項鏈任務鏈第 1 步，這趟只做這一步"},
+  {d:"uld",c:"skip",n:"搜尋項鏈，再來一次",en:"Necklace Recovery, Take 2",reason:"要先回奧格瑪交第 1 步才接得到，得再打一趟"},
+  {d:"uld",c:"skip",n:"翻譯日記",en:"Translating the Journal",reason:"項鏈任務鏈後段，需要第二趟"},
+  {d:"uld",c:"skip",n:"尋找寶貝",en:"Find the Gems and Power Source",reason:"項鏈任務鏈後段，需要第二趟"},
+  {d:"uld",c:"chain",n:"奧達曼的蘑菇",en:"Uldaman Reagent Run",npc:"加卡爾",w:"荒蕪之地・卡加斯 (2.4, 46.0)",lv:36,xp:3450,src:{q:"荒蕪之地的試劑",npc:"加卡爾",w:"荒蕪之地・卡加斯 (2.4, 46.0)"},note:"紫色蘑菇 ×12"},
+  {d:"uld",c:"inside",n:"白金圓盤",en:"The Platinum Discs",npc:"諾甘農圓盤",w:"尾王阿札達斯附近",lv:40,xp:4200,note:"學習石頭守護者看守的知識，不共享",side:"B"},
+  {d:"uld",c:"inside",n:"白金圓盤（部落）",en:"The Platinum Discs",npc:"諾甘農圓盤",w:"尾王阿札達斯附近",lv:40,xp:5250,note:"迷你白金圓盤交給雷霆崖的聖者圖希克，後續「奧丹姆的線索」「拭目以待」"},
+  // 克羅多克要塞
+  {d:"krol",c:"chain",n:"復仇的證明（暫譯）",en:"A Token of Vengeance",npc:"Da'grosh",w:"大河林地・Rog'mar 西邊山丘",lv:38,xp:3450,src:{q:"Clugfist's Decree",npc:"Clugfist",w:"大河林地・Bolder'ok",path:"Clugfist's Decree → The Wayward Warrior → Break Their Chains／Carving a Path／Rise Up! → Bring Me His Head → 本任務",warn:"Clugfist's Decree 之前還有 Sunnyglade 的暮光之錘任務，Wowhead 沒標出最前面的起點"},note:"教徒耳朵 ×15"},
+  {d:"krol",c:"chain",n:"馬戈之眼（暫譯）",en:"Eye of Mugg",npc:"Krom'rosh",w:"大河林地・Rog'mar",lv:40,xp:4850,src:{q:"Clugfist's Decree",npc:"Clugfist",w:"大河林地・Bolder'ok",path:"Clugfist's Decree → The Wayward Warrior → Break Their Chains／Carving a Path／Rise Up! → Bring Me His Head → It Is Time, Brother... → 本任務",warn:"Clugfist's Decree 之前還有 Sunnyglade 的暮光之錘任務，Wowhead 沒標出最前面的起點"},note:"殺尾王帶回馬戈之眼"},
+  {d:"krol",c:"chain",n:"暮光典籍（暫譯）",en:"Tome of Twilight",npc:"Tran'gul",w:"大河林地",lv:39,xp:4650,src:{q:"Clugfist's Decree",npc:"Clugfist",w:"大河林地・Bolder'ok",path:"Clugfist's Decree → The Wayward Warrior → Break Their Chains／Carving a Path／Rise Up! → Bring Me His Head → It Is Time, Brother... → 本任務",warn:"Clugfist's Decree 之前還有 Sunnyglade 的暮光之錘任務，Wowhead 沒標出最前面的起點"},note:"在副本內找回暮光典籍"},
+  {d:"krol",c:"inside",n:"克羅多克模具（暫譯）",en:"Krol'dok Moulding",npc:"物品：克羅多克模具",w:"Tunk 掉落（第三王東北邊的鐵匠）",lv:38,xp:3300,note:"全隊都會掉，交給 Rog'mar 的 Kreza Darkthorn",tip:"Tunk 在第三王 War Handler Ashka 東北邊，一直在敲鐵砧，很好認。換到的鑰匙可以開副本下層北邊的大門，跳過幾隻王直達尾王。"},
+  {d:"krol",c:"skip",n:"關鍵材料（暫譯）",en:"Key Ingredients",reason:"出副本後交厚皮和鐵錠換鑰匙，鑰匙下一趟才用得到"},
+  {d:"krol",c:"inside",n:"別了，克羅多克！（暫譯）",en:"Krol'dok No More!",npc:"副本內護送",w:"副本內",lv:40,xp:3450,note:"護送 NPC 到安全處，Wowhead 資料尚未完成"},
+  // 祖爾法拉克
+  {d:"zf",c:"direct",side:"B",n:"探水棒",en:"Divino-matic Rod",npc:"首席工程師沙克斯·比格維茲",w:"塔納利斯・加基森 (52.4, 28.4)",lv:40,xp:6300,note:"從布萊中士身上拿回探水棒",tip:"殺神廟頂端的沙怒劊子手拿鑰匙，放出籠子裡的布萊中士。之後階梯下會湧上好幾波 42–45 級食人妖，守在階梯頂端打最安全。"},
+  {d:"zf",c:"direct",side:"B",n:"加茲瑞拉",en:"Gahz'rilla",npc:"維茲爾·銅栓",w:"千針石林・閃光平原 (78.0, 77.0)",lv:40,xp:7100,note:"加茲瑞拉的鱗片",tip:"進副本前要先準備召喚道具：到辛特蘭打看守者奇亞加拿「神聖之槌」，再到辛特蘭的祖爾祭壇充能。進副本後一路往左走到大水池，敲鑼召喚。召喚前先清掉房間裡的巡邏怪。"},
+  {d:"zf",c:"direct",side:"B",n:"深淵皇冠",en:"Tiara of the Deep",npc:"塔貝薩",w:"塵泥沼澤 (46.0, 57.0)",lv:40,xp:6050,note:"殺水占師沃拉薩拿深淵皇冠",tip:"法師訓練師給的「塔貝薩的任務」只是引導，不做也能接。沃拉薩在加茲瑞拉的房間裡，沿水池巡邏，先清掉經過水池南端的巡邏怪再拉她。"},
+  {d:"zf",c:"skip",side:"B",n:"塔貝薩的任務",en:"Tabetha's Task",reason:"引導任務，沒有副本目標，不做也能接「深淵皇冠」"},
+  {d:"zf",c:"skip",side:"B",n:"特蘭雷克",en:"Tran'rek",reason:"引導任務，從藏寶海灣走到加基森，不做也能接「聖甲蟲的殼」"},
+  {d:"zf",c:"direct",side:"B",n:"聖甲蟲的殼",en:"Scarab Shells",npc:"特蘭雷克",w:"塔納利斯・加基森 (51.4, 26.8)",lv:40,xp:3900,note:"完整的聖甲蟲殼 ×5",tip:"不用先做「特蘭雷克」也能接。聖甲蟲在殉教者塞卡巡邏的房間，小心一次拉到好幾隻。"},
+  {d:"zf",c:"chain",n:"蜘蛛之神",en:"The Spider God",npc:"加德林大師",w:"杜洛塔・森金村 (55.8, 74.4)",lv:40,xp:4850,src:{q:"毒液瓶",npc:"物品：毒液瓶（營地桌上的綠色瓶子）",w:"辛特蘭・枯木食人妖營地",path:"毒液瓶 → 完好無損的毒囊 → 請教加德林大師 → 蜘蛛之神（本任務）→ 召喚沙德拉"},note:"點殉教者塞卡房間裡的石板，找到蜘蛛之神的名字",tip:"塞卡在西邊的大房間巡邏，房間裡的聖甲蟲是中立的，不要用範圍技能。潛行職業可以直接摸過去點石板，不用殺塞卡。交任務要回森金村。"},
+  {d:"zf",c:"skip",side:"B",n:"食人妖調和劑",en:"Troll Temper",reason:"食人妖調和劑 ×20 掉率普通，玩家回報要打兩趟才收齊"},
+  {d:"zf",c:"chain",side:"B",n:"摩沙魯的預言",en:"Prophecy of Mosh'aru",npc:"葉基亞",w:"塔納利斯・蒸汽絞盤港 (66.8, 22.4)",lv:40,xp:5250,src:{q:"尖嘯者的靈魂",npc:"葉基亞",w:"塔納利斯・蒸汽絞盤港 (66.8, 22.4)",path:"尖嘯者的靈魂 → 摩沙魯的預言（本任務）→ 遠古之卵 → 神靈哈卡",warn:"前置要抓菲拉斯的谷地尖嘯者靈魂，11/17 熱修後牠們改到恐懼之島的海岸"},note:"兩塊摩沙魯石板",tip:"第一塊是殉教者塞卡掉的（聖甲蟲房間），第二塊是水占師沃拉薩掉的（加茲瑞拉的區域）。"},
+  {d:"zf",c:"direct",n:"祖穆拉恩的頭顱",en:"Zum'rah's Head",npc:"瑪庫可（陶土議會）",w:"莫高雷 (32.4, 20.6)",lv:42,xp:5050,note:"殺巫毒醫生祖穆拉恩，帶回他的頭顱"},
+  {d:"zf",c:"chain",side:"B",cls:["盜賊"],n:"卡茲多咒符",en:"The Talisman of Kazdor",npc:"法拉德（祖師級盜賊）",w:"奧特蘭克山脈・拉文霍德莊園 (84.4, 80.2)",lv:45,xp:4700,src:{q:"禍只單行",npc:"法拉德（待確認）",w:"奧特蘭克山脈・拉文霍德莊園 (84.4, 80.2)",path:"禍只單行 → 卡茲多咒符（本任務）→ Best Laid Plans → One Last Drop → Biding Our Time"},note:"盜賊職業任務",tip:"進副本走到暗影施法者圍著噴泉的庭院，照平常路線右轉；走長廊之前，先看右邊小屋裡的陶土容器。門口的怪可以引開或悶棍。11/17 熱修修正了祖穆拉恩可能不出現的問題。"},
+  {d:"zf",c:"skip",side:"B",cls:["盜賊"],n:"Best Laid Plans",en:"Best Laid Plans",reason:"盜賊任務鏈的交付環節，沒有副本目標"},
+  // 瑪拉頓
+  {d:"mara",c:"direct",n:"暗影殘片",en:"Shadowshard Fragments",npc:"尤塞爾奈（法師訓練師）",w:"奧格瑪・精神谷 (38.8, 85.4)",lv:39,xp:3450,note:"暗影殘片 ×10",tip:"打紫色副本入口外的石元素，大約兩隻掉一個，不用進副本。"},
+  {d:"mara",c:"direct",side:"B",n:"扭曲的邪惡",en:"Twisted Evils",npc:"維洛",w:"淒涼之地・科爾米克小屋 (62.0, 39.4)",lv:41,xp:5250,note:"瑟萊德絲水晶雕像 ×25",tip:"掉率最高的是在副本外圍遊蕩的精英半人馬「無名先知」，殺掉後會在旁邊馬上重生，可以來回刷。"},
+  {d:"mara",c:"direct",n:"維利塔恩的污染",en:"Vyletongue Corruption",npc:"瓦克·戰痕",w:"淒涼之地・葬影村 (23.2, 70.2)",lv:41,xp:5250,note:"在橘色副本入口外的橘色水晶池裝滿小瓶，進橘色區對地上的紅色小芽使用，不共享",tip:"橘色區一進去就有兩株。一定要進副本裡才算。"},
+  {d:"mara",c:"direct",side:"B",n:"瑪拉頓的傳說",en:"Legends of Maraudon",npc:"凱雯德拉",w:"瑪拉頓外圍洞穴，往副本的橘色水晶通道左側",lv:41,xp:3400,note:"塞雷布拉斯之杖（橘色區諾克賽恩掉落）＋塞雷布拉斯鑽石（紫色區維利塔恩領主掉落），交給副本內的贖罪的塞雷布拉斯",tip:"諾克賽恩打得痛，戰鬥中會叫小怪；維利塔恩開打後會有兩隻隱形惡魔加入。"},
+  {d:"mara",c:"inside",side:"B",n:"塞雷布拉斯節杖",en:"The Scepter of Celebras",npc:"贖罪的塞雷布拉斯",w:"副本內",lv:41,xp:5700,note:"接在「瑪拉頓的傳說」之後，不共享",tip:"拿到節杖以後，可以直接開傳送門到內瑪拉頓，不用再走橘色或紫色區。弄丟了可以再殺一次塞雷布拉斯，跟他對話補領。"},
+  {d:"mara",c:"direct",side:"B",n:"賤民的指引",en:"The Pariah's Instructions",npc:"半人馬賤民",w:"淒涼之地南方 (43.4, 84.8)",lv:39,xp:5450,note:"聯合墜飾＋靈魂墜飾，不共享",tip:"先殺副本外圍遊蕩的精英「無名先知」拿靈魂墜飾，用它讓五位可汗現身再殺：中央區、紫色區、橘色區、紫色副本內、橘色副本內各一位。"},
+  {d:"mara",c:"direct",n:"大地的污染",en:"Corruption of Earth and Seed",npc:"瑟琳德拉",w:"淒涼之地・葬影村南邊 (26.8, 77.6)",lv:45,xp:6100,note:"殺瑟萊德絲公主",tip:"不需要前置，45 級就能接。公主打很痛，還會把人擊退。"},
+  {d:"mara",c:"inside",side:"B",n:"生命之種",en:"Seed of Life",npc:"札爾塔的靈魂",w:"瑟萊德絲公主死後在場地中央出現",lv:39,xp:6100,note:"交給月光林地的守護者雷姆洛斯，不共享",tip:"去月光林地最輕鬆的路：從黑海岸沿海岸游進去。"},
+  {d:"mara",c:"chain",side:"B",n:"腐敗與懊悔",en:"Rot and Regret",npc:"Woodwyrd",w:"座標 69.6, 71.8（地圖待確認）",lv:35,xp:5700,src:{q:"林地之語",npc:"NPC 待查",w:"座標 53.0, 75.8（地圖待確認）",path:"林地之語 → 腐敗與懊悔（本任務）→ 難辭其咎 → 阿迦瑪甘之血（剃刀高地）"},note:"一瓶大地之歌水＋熄滅森詭",tip:"尾王下方的水池裡有鱷魚王，水池東側石橋下有圓形水柱，互動裝水。帶回去對 Woodwyrd 旁邊燃燒的樹使用，不是對 NPC。"},
+  {d:"mara",c:"direct",n:"安希的烈光",en:"（英文名待查）",npc:"歐菈娜‧亮蹄",w:"地點待查",lv:43,xp:6100,note:"取得安希的烈光",tip:"在石頭王「滑坡」旁邊。"}
+];
+
+/* ===== 角色 =====
+   任務可加 side:"H"（部落，預設）/"A"（聯盟）/"B"（雙方），
+   cls:["戰士",...] 限定職業，race:["獸人",...] 限定種族。 */
+const RACES = {H:["獸人","不死族","牛頭人","食人妖","天裔精靈"], A:["人類","矮人","夜精靈","地精","天裔精靈"]};
+/* Forever 的種族職業組合（含新增的獸人法師、食人妖術士、不死族聖騎士、人類獵人、地精牧師、矮人薩滿，以及天裔精靈） */
+const RACE_CLASS = {
+  H:{"獸人":["戰士","獵人","盜賊","薩滿","法師","術士"],"不死族":["戰士","聖騎士","盜賊","牧師","法師","術士"],"牛頭人":["戰士","獵人","薩滿","德魯伊"],"食人妖":["戰士","獵人","盜賊","牧師","薩滿","法師","術士"],"天裔精靈":["戰士","獵人","盜賊","薩滿","德魯伊"]},
+  A:{"人類":["戰士","聖騎士","獵人","盜賊","牧師","法師","術士"],"矮人":["戰士","聖騎士","獵人","盜賊","牧師","薩滿"],"夜精靈":["戰士","獵人","盜賊","牧師","德魯伊"],"地精":["戰士","盜賊","牧師","法師","術士"],"天裔精靈":["戰士","獵人","盜賊","法師","德魯伊"]}
+};
+const CLASSES = ["戰士","聖騎士","獵人","盜賊","牧師","薩滿","法師","術士","德魯伊"];
+const CLASS_COLOR = {"戰士":"#C69B6D","聖騎士":"#F48CBA","獵人":"#AAD372","盜賊":"#FFF468","牧師":"#FFFFFF","薩滿":"#0070DD","法師":"#3FC7EB","術士":"#8788EE","德魯伊":"#FF7C0A"};
+const FAC_COLOR = {H:"#ff4a3d", A:"#5b9bff"};
+let who = null;
+try { who = JSON.parse(localStorage.getItem("dq-who") || "null"); } catch(e) { who = null; }
+const avail = q => who && ((q.side || "H") === "B" || (q.side || "H") === who.f)
+  && (!q.cls || q.cls.includes(who.c)) && (!q.race || q.race.includes(who.r));
+
+
+/* ===== 掉落 =====
+   t：裝備類型（布甲/皮甲/鎖甲/背部/劍/錘/拳套/匕首/弩），用來判斷你的職業能不能用。
+   stats：屬性；drop：掉落機率；chg：Forever 相對原版的調整。 */
+const LOOT = {
+  rfc: {
+    note:"小怪掉的大多是全世界通用的隨機裝備，這裡只列首領的專屬掉落。",
+    bosses:[
+      {n:"奧格弗林特",lv:"16 精英",where:"第一個首領，穴居怪區域",quest:null,items:[
+        {id:272996,n:"穴居怪權杖",q:3,slot:"主手",t:"錘",stats:["每秒傷害 8.1","速度 2.40"],pending:true},
+        {id:272998,n:"白骨指虎",q:3,slot:"主手",t:"拳套",stats:["每秒傷害 12.3","速度 2.00"],pending:true},
+        {id:272999,n:"野蠻之弩",q:3,slot:"遠程",t:"弩",stats:["每秒傷害 9.5","速度 2.00"],pending:true}]},
+      {n:"饑餓者塔拉加曼",lv:"16 精英",where:"岩漿上的石橋",quest:"饑餓者塔拉加曼（心臟）",items:[
+        {id:14145,n:"被詛咒的魔刃",q:3,slot:"主手",t:"劍",stats:["19 - 37 傷害","速度 2.30","每秒傷害 12.2","命中時：使敵人的攻擊強度降低 24 點，持續 30 秒"],drop:"29.9%",chg:"原版是優秀（綠色），速度 2.60"},
+        {id:14148,n:"水晶腕輪",q:3,slot:"手腕",t:"布甲",stats:["15 護甲","+2 耐力","+3 精神"],drop:"28.0%",chg:"原版是優秀（綠色），+1 智力改成 +2 耐力"},
+        {id:14149,n:"地下斗篷",q:3,slot:"背部",t:"背部",stats:["17 護甲","+3 力量","每 5 秒回覆 5 點生命值"],drop:"29.9%",chg:"原版是優秀（綠色），敏捷改成生命回覆"}]},
+      {n:"祈求者耶戈什",lv:"16 精英",where:"燃刃教徒區域的盡頭",quest:"隱藏的敵人",items:[
+        {id:14147,n:"洞穴護腕",q:3,slot:"手腕",t:"鎖甲",stats:["78 護甲","+2 力量","+3 精神"],drop:"30.0%",chg:"原版是優秀（綠色），耐力改成精神"},
+        {id:14150,n:"招魂法袍",q:3,slot:"胸部",t:"布甲",stats:["35 護甲","+6 耐力","+4 智力","+4 精神"],drop:"31.7%",chg:"原版是優秀（綠色），耐力 +3 提高到 +6，新增精神"},
+        {id:14151,n:"聖歌之刃",q:3,slot:"單手",t:"匕首",stats:["12 - 24 傷害","速度 1.50","+2 敏捷","+3 耐力"],chg:"原版是優秀（綠色），傷害 9 - 18"}]},
+      {n:"巴札蘭",lv:"16 精英",where:"耶戈什上方，沿牆的暗路上去",quest:"隱藏的敵人",items:[
+        {id:273003,n:"灼熱匕首",q:3,slot:"主手",t:"匕首",stats:["每秒傷害 8.1","速度 1.60"],pending:true},
+        {id:273005,n:"薩特皮披風",q:3,slot:"背部",t:"背部",stats:["17 護甲"],pending:true},
+        {id:273007,n:"裂谷步靴",q:3,slot:"腳",t:"皮甲",stats:["56 護甲"],pending:true}]}
+    ]
+  }
+};
+const CAN_USE = {
+  "布甲":CLASSES_ALL(),"背部":CLASSES_ALL(),
+  "皮甲":["戰士","聖騎士","獵人","盜賊","薩滿","德魯伊"],
+  "鎖甲":["戰士","聖騎士"],
+  "劍":["戰士","聖騎士","獵人","盜賊","法師","術士"],
+  "錘":["戰士","聖騎士","盜賊","牧師","薩滿","德魯伊"],
+  "拳套":["戰士","獵人","盜賊","薩滿","德魯伊"],
+  "匕首":["戰士","獵人","盜賊","牧師","法師","術士","薩滿","德魯伊"],
+  "弩":["戰士","獵人","盜賊"]
+};
+function CLASSES_ALL(){ return ["戰士","聖騎士","獵人","盜賊","牧師","薩滿","法師","術士","德魯伊"]; }
+
+/* 自製部位圖示（線條 SVG，顏色跟著主題） */
+const ICON = {
+  "劍":'<path d="M18 3l3 3-9.5 9.5-3-3z"/><path d="M7 14l3 3M5 16l3 3M4 20l3-3"/>',
+  "匕首":'<path d="M17 4l3 3-7 7-3-3z"/><path d="M8.5 12.5l3 3M6 16l2 2M4.5 19.5l2-2"/>',
+  "錘":'<rect x="12" y="3" width="8" height="6" rx="1" transform="rotate(45 16 6)"/><path d="M12.5 11.5L4 20"/>',
+  "拳套":'<path d="M7 10V7a2 2 0 014 0v3M11 9V6a2 2 0 014 0v4M15 10V8a2 2 0 014 0v5a7 7 0 01-7 7h-1a6 6 0 01-6-6v-2a2 2 0 014 0"/>',
+  "弩":'<path d="M4 8c5 2 11 2 16 0M12 4v16M9 17l3 3 3-3"/><path d="M4 8l8 4 8-4"/>',
+  "背部":'<path d="M8 4h8l3 16-7-3-7 3z"/><path d="M8 4c1 2 7 2 8 0"/>',
+  "手腕":'<rect x="5" y="8" width="14" height="8" rx="3"/><path d="M9 8v8M15 8v8"/>',
+  "胸部":'<path d="M8 4l4 2 4-2 4 4-2 3v9H6v-9L4 8z"/><path d="M12 6v14"/>',
+  "腳":'<path d="M8 3h5v10l6 3v4H5v-4l3-2z"/><path d="M5 18h14"/>'
+};
+function iconFor(it){
+  const k = ICON[it.t] ? it.t : (ICON[it.slot] ? it.slot : "背部");
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>';
+}
+const canUse = it => (CAN_USE[it.t] || []).includes(who.c);
+
+/* ===== 畫面 ===== */
+const nav = document.getElementById("nav");
+const main = document.getElementById("main");
+const search = document.getElementById("q");
+let current = DUNGEONS[0].id;
+let view = "quests";
+const fmt = n => n.toLocaleString("en-US");
+const CAT = {direct:"直接接", inside:"副本內", chain:"需要前置"};
+const dName = id => DUNGEONS.find(d => d.id === id).name;
+
+function renderNav(){
+  nav.innerHTML = "";
+  for (const d of DUNGEONS){
+    const qs = QUESTS.filter(q => q.d === d.id && q.c !== "skip" && avail(q));
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-current", (!search.value.trim() && d.id === current) ? "true" : "false");
+    b.innerHTML = `<span class="n"></span><span class="b"><strong>${qs.length}</strong>個任務</span><span class="r">${d.lr} 級</span>`;
+    b.querySelector(".n").textContent = d.name;
+    b.addEventListener("click", () => { search.value = ""; if (d.id !== current) view = "quests"; location.hash = d.id; render(); });
+    nav.appendChild(b);
+  }
+}
+
+function add(el, cls, text){ const x = document.createElement("div"); x.className = cls; x.textContent = text; el.appendChild(x); return x; }
+
+function card(q, showDungeon){
+  const el = document.createElement("div");
+  el.className = "q c-" + q.c;
+  if (showDungeon) add(el, "cat", dName(q.d) + "・" + CAT[q.c]);
+  const h = document.createElement("div"); h.className = "qh";
+  h.innerHTML = '<div><span class="t"></span><span class="en"></span></div><span class="lv"><b>' + q.lv + '</b> 級可接</span>';
+  h.querySelector(".t").textContent = q.n;
+  h.querySelector(".en").textContent = q.en;
+  el.appendChild(h);
+  const dl = document.createElement("dl"); dl.className = "info";
+  const row = (k, v, cls) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; if (cls) dd.className = cls; dl.append(dt, dd); };
+  row(q.npc.startsWith("物品") ? "觸發" : "接任務", q.npc.replace(/^物品：/, "物品「") + (q.npc.startsWith("物品") ? "」" : ""));
+  row("地點", q.w);
+  row("經驗", q.xp != null ? fmt(q.xp) : (q.xpText || "—"), "num");
+  el.appendChild(dl);
+  if (q.note){ const n = document.createElement("p"); n.className = "note"; n.textContent = q.note; el.appendChild(n); }
+  if (q.src){
+    const s = document.createElement("div"); s.className = "blk src";
+    add(s, "lab", "系列源頭");
+    const line = document.createElement("div");
+    line.innerHTML = '「<span class="sq"></span>」<span class="sw"></span>';
+    line.querySelector(".sq").textContent = q.src.q;
+    line.querySelector(".sw").textContent = q.src.npc + "・" + q.src.w;
+    s.appendChild(line);
+    if (q.src.path) add(s, "path", q.src.path);
+    if (q.src.warn) add(s, "warn", q.src.warn);
+    el.appendChild(s);
+  }
+  if (q.tip){ const t = document.createElement("div"); t.className = "blk tip"; add(t, "lab", "Wowhead 玩家提示"); t.append(q.tip); el.appendChild(t); }
+  return el;
+}
+
+const COLS = [
+  {c:"direct", t:"直接接", m:"!", desc:"進副本前去找 NPC 接"},
+  {c:"inside", t:"副本內", m:"✦", desc:"副本裡撿到、打王掉落、環境物件或 NPC 給的"},
+  {c:"chain",  t:"需要前置", m:"…", desc:"要先做完同系列的任務，下方標出系列源頭"}
+];
+
+function renderDungeon(){
+  const d = DUNGEONS.find(x => x.id === current);
+  const all = QUESTS.filter(q => q.d === d.id && avail(q));
+  main.innerHTML = `<div class="dhead"><h2></h2><span class="lr">${d.lr} 級・${all.filter(q=>q.c!=="skip").length} 個任務</span></div>${who.f==="A" ? '<p class="notice">目前只收錄部落任務，這裡只列出雙方都能接的；聯盟專屬任務之後補上。</p>' : ""}<div class="actions"><button class="btn primary" id="copy" type="button">複製出發前清單</button><span class="toast" id="toast" role="status"></span></div><div class="cols"></div>`;
+  main.querySelector("#copy").addEventListener("click", () => copyList(d));
+  main.querySelector("h2").textContent = d.name;
+  addTabs(d);
+  if (view === "loot"){ renderLoot(d); return; }
+  const cols = main.querySelector(".cols");
+  for (const col of COLS){
+    const qs = all.filter(q => q.c === col.c);
+    const box = document.createElement("section");
+    box.className = "col c-" + col.c;
+    box.innerHTML = `<h3><span class="mark" aria-hidden="true">${col.m}</span>${col.t}<span class="tag">${qs.length}</span></h3><p class="desc">${col.desc}</p><div class="cards"></div>`;
+    const list = box.querySelector(".cards");
+    if (!qs.length) list.innerHTML = '<div class="empty">沒有這類任務</div>';
+    qs.forEach(q => list.appendChild(card(q)));
+    cols.appendChild(box);
+  }
+  const skips = all.filter(q => q.c === "skip");
+  if (skips.length){
+    const sec = document.createElement("section");
+    sec.className = "skip";
+    sec.innerHTML = `<h3>未列入（${skips.length}）：要打兩趟、沒有副本目標，或出副本後才做的</h3><ul></ul>`;
+    const ul = sec.querySelector("ul");
+    skips.forEach(q => { const li = document.createElement("li"); li.innerHTML = "<b></b>："; li.querySelector("b").textContent = q.n; li.append(q.reason); ul.appendChild(li); });
+    main.appendChild(sec);
+  }
+  footer();
+}
+
+function addTabs(d){
+  const t = document.createElement("div"); t.className = "tabs"; t.setAttribute("role","tablist");
+  [["quests","任務"],["loot","掉落"]].forEach(([k,label]) => {
+    const b = document.createElement("button"); b.type = "button"; b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", view === k ? "true" : "false");
+    b.textContent = label + (k === "loot" && !LOOT[d.id] ? "（未收錄）" : "");
+    b.addEventListener("click", () => { view = k; render(); });
+    t.appendChild(b);
+  });
+  main.querySelector(".dhead").after(t);
+  if (view === "loot"){ main.querySelector(".actions")?.remove(); main.querySelector(".notice")?.remove(); }
+}
+
+function renderLoot(d){
+  main.querySelector(".cols").remove();
+  const data = LOOT[d.id];
+  const wrap = document.createElement("div"); wrap.className = "loot";
+  if (!data){ wrap.innerHTML = '<div class="empty">這個副本的掉落還沒收錄，目前只有怒焰裂谷。</div>'; main.appendChild(wrap); footer(); return; }
+  const p = document.createElement("p"); p.className = "desc"; p.textContent = data.note + "「你可以用」依你選的職業判斷能不能裝備。"; wrap.appendChild(p);
+  data.bosses.forEach((b, i) => {
+    const sec = document.createElement("section"); sec.className = "boss";
+    sec.innerHTML = '<div class="bh"><span class="bn">' + (i + 1) + '</span><div><h3></h3><div class="bm"></div></div></div><div class="items"></div>';
+    sec.querySelector("h3").textContent = b.n;
+    sec.querySelector(".bm").textContent = b.lv + "・" + b.where + (b.quest ? "・任務：" + b.quest : "");
+    const list = sec.querySelector(".items");
+    b.items.forEach(it => {
+      const ok = canUse(it);
+      const r = document.createElement("div"); r.className = "item q" + it.q + (ok ? "" : " no");
+      r.innerHTML = '<div class="row"><span class="ico">' + iconFor(it) + '</span><div class="body"><div class="ih"><span class="in"></span><span class="use"></span></div><div class="it"></div></div></div><ul class="st"></ul>';
+      if (it.id){ const a = document.createElement("a"); a.href = "https://www.wowhead.com/forever/tw/item=" + it.id; a.target = "_blank"; a.rel = "noopener"; a.textContent = it.n; r.querySelector(".in").appendChild(a); }
+      else r.querySelector(".in").textContent = it.n;
+      r.querySelector(".use").textContent = ok ? "你可以用" : who.c + "不能用";
+      r.querySelector(".it").textContent = it.slot + (it.t !== it.slot ? "・" + it.t : "") + (it.drop ? "・掉落機率 " + it.drop : "");
+      const ul = r.querySelector(".st");
+      it.stats.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
+      if (it.pending){ const li = document.createElement("li"); li.className = "pend"; li.textContent = "完整屬性和掉落機率待補"; ul.appendChild(li); }
+      if (it.chg){ const c = document.createElement("div"); c.className = "chg"; c.textContent = "Forever 調整：" + it.chg; r.appendChild(c); }
+      list.appendChild(r);
+    });
+    wrap.appendChild(sec);
+  });
+  main.appendChild(wrap);
+  footer();
+}
+
+function renderSearch(term){
+  const t = term.toLowerCase();
+  const hits = QUESTS.filter(q => q.c !== "skip" && avail(q) && [q.n, q.en, q.npc, q.w, q.src && q.src.q, q.src && q.src.npc].some(x => x && x.toLowerCase().includes(t)));
+  main.innerHTML = `<div class="dhead"><h2>搜尋結果</h2><span class="lr">${hits.length} 個任務</span></div><div class="results"></div>`;
+  const r = main.querySelector(".results");
+  if (!hits.length){ r.innerHTML = '<div class="empty">找不到符合的任務，試試任務名、英文名或 NPC 名字</div>'; }
+  for (const d of DUNGEONS){
+    const qs = hits.filter(q => q.d === d.id);
+    if (!qs.length) continue;
+    const h = document.createElement("h3"); h.textContent = d.name + "（" + d.lr + " 級）"; r.appendChild(h);
+    const g = document.createElement("div"); g.className = "grp";
+    qs.forEach(q => g.appendChild(card(q, true)));
+    r.appendChild(g);
+  }
+  footer();
+}
+
+function copyList(d){
+  const qs = QUESTS.filter(q => q.d === d.id && q.c !== "skip" && avail(q));
+  const line = q => `・${q.n}（${q.npc}，${q.w}）`;
+  const out = [`【${d.name}】${d.lr} 級・${qs.length} 個任務`];
+  const direct = qs.filter(q=>q.c==="direct"), chain = qs.filter(q=>q.c==="chain"), inside = qs.filter(q=>q.c==="inside");
+  if (direct.length) out.push("", "直接接：", ...direct.map(line));
+  if (chain.length) out.push("", "需要前置：", ...chain.map(q => line(q) + (q.src ? `\n　源頭：「${q.src.q}」${q.src.npc}，${q.src.w}` : "")));
+  if (inside.length) out.push("", "副本內：", ...inside.map(q => `・${q.n}（${q.w}）`));
+  const t = document.getElementById("toast");
+  navigator.clipboard.writeText(out.join("\n")).then(() => { t.textContent = "已複製，可以貼給隊友"; }, () => { t.textContent = "瀏覽器不允許複製，請手動選取文字"; });
+}
+
+function renderGate(){
+  nav.innerHTML = "";
+  search.disabled = true;
+  document.getElementById("who").innerHTML = "";
+  const f0 = who ? who.f : "H";
+  main.innerHTML = `<form class="gate" id="gate">
+    <h2>先選你的角色</h2>
+    <p>有些任務限定陣營、職業或種族，選好後只會列出你能做的任務。</p>
+    <fieldset><legend>陣營</legend><div class="opts" id="o-f">
+      <label data-fc style="--fc:${FAC_COLOR.H}"><input type="radio" name="f" value="H"><span class="dot"></span>部落</label>
+      <label data-fc style="--fc:${FAC_COLOR.A}"><input type="radio" name="f" value="A"><span class="dot"></span>聯盟</label></div></fieldset>
+    <fieldset><legend>種族</legend><div class="opts" id="o-r"></div></fieldset>
+    <fieldset><legend>職業</legend><div class="opts" id="o-c"></div></fieldset>
+    <div class="err" id="err" role="alert"></div>
+    <button class="btn primary" type="submit">查看任務</button>
+  </form>`;
+  const form = main.querySelector("#gate");
+  const fillRaces = f => {
+    document.body.dataset.f = f;
+    main.querySelector("#o-r").innerHTML = RACES[f].map(r => `<label><input type="radio" name="r" value="${r}">${r}</label>`).join("");
+  };
+  main.querySelector("#o-c").innerHTML = CLASSES.map(c => `<label data-cc style="--cc:${CLASS_COLOR[c]}"><input type="radio" name="c" value="${c}"><span class="dot"></span>${c}</label>`).join("");
+  form.querySelector(`input[name=f][value=${f0}]`).checked = true;
+  fillRaces(f0);
+  if (who){
+    const r = form.querySelector(`input[name=r][value="${who.r}"]`); if (r) r.checked = true;
+    const c = form.querySelector(`input[name=c][value="${who.c}"]`); if (c) c.checked = true;
+  }
+  const syncClasses = () => {
+    const f = form.querySelector("input[name=f]:checked")?.value;
+    const r = form.querySelector("input[name=r]:checked")?.value;
+    const allowed = (f && r) ? RACE_CLASS[f][r] : null;
+    form.querySelectorAll("input[name=c]").forEach(i => {
+      const ok = !allowed || allowed.includes(i.value);
+      i.disabled = !ok;
+      i.closest("label").classList.toggle("off", !ok);
+      if (!ok && i.checked) i.checked = false;
+    });
+  };
+  form.addEventListener("change", e => { if (e.target.name === "f") fillRaces(e.target.value); if (e.target.name === "f" || e.target.name === "r") syncClasses(); });
+  syncClasses();
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const f = fd.get("f"), r = fd.get("r"), c = fd.get("c");
+    if (!f || !r || !c){ main.querySelector("#err").textContent = "陣營、種族、職業都要選"; return; }
+    who = {f, r, c};
+    try { localStorage.setItem("dq-who", JSON.stringify(who)); } catch(e) {}
+    render();
+  });
+}
+
+function renderWho(){
+  const el = document.getElementById("who");
+  document.body.dataset.f = who.f;
+  el.innerHTML = `<span class="chip ${who.f === "H" ? "h" : "a"}" style="--cc:${CLASS_COLOR[who.c]}"><span class="f"></span><span class="r"></span><span class="cl"></span></span><button class="btn" type="button" id="chg">更換角色</button>`;
+  el.querySelector(".f").textContent = who.f === "H" ? "部落" : "聯盟";
+  el.querySelector(".r").textContent = who.r;
+  el.querySelector(".cl").textContent = who.c;
+  el.querySelector("#chg").addEventListener("click", () => { const keep = who; who = null; renderGate(); who = null; window._prev = keep; prefill(keep); });
+}
+function prefill(p){
+  if (!p) return;
+  const form = main.querySelector("#gate");
+  form.querySelector(`input[name=f][value=${p.f}]`).click();
+  const r = form.querySelector(`input[name=r][value="${p.r}"]`);
+  if (r){ r.checked = true; r.dispatchEvent(new Event("change", {bubbles:true})); }
+  const c = form.querySelector(`input[name=c][value="${p.c}"]`); if (c && !c.disabled) c.checked = true;
+}
+
+function footer(){
+  const f = document.createElement("footer");
+  f.textContent = "資料來自「任務清單」試算表與 Wowhead（2026/11/18）。物品圖示與說明框由 Wowhead 提供。「Wowhead 玩家提示」整理自 Wowhead 評論區評分最高的留言。標「（暫譯）」的是還沒有官方中文名稱的任務。";
+  main.appendChild(f);
+}
+
+function whRefresh(){
+  try {
+    if (window.WH && WH.Tooltips && WH.Tooltips.refreshLinks){ document.body.classList.add("wh-on"); WH.Tooltips.refreshLinks(); }
+    else if (window.$WowheadPower && $WowheadPower.refreshLinks){ document.body.classList.add("wh-on"); $WowheadPower.refreshLinks(); }
+  } catch(e) {}
+}
+window.addEventListener("load", () => setTimeout(whRefresh, 300));
+function render(){
+  setTimeout(whRefresh, 50);
+  if (!who){ renderGate(); return; }
+  search.disabled = false;
+  renderWho();
+  renderNav();
+  const term = search.value.trim();
+  term ? renderSearch(term) : renderDungeon();
+}
+search.addEventListener("input", render);
+function fromHash(){
+  const h = location.hash.slice(1);
+  current = DUNGEONS.some(d => d.id === h) ? h : DUNGEONS[0].id;
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
