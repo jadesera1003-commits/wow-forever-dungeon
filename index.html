@@ -132,7 +132,11 @@ main{padding:20px 24px 48px;min-width:0}
 .item.no{opacity:.55}
 .item .it{font-size:12px;color:#b9b8b0}
 .item .st{margin:2px 0 0;padding:0;list-style:none;font-size:13px;line-height:1.55;color:#ffffff}
-.item .st .g{color:#4dff5e}
+.item .st .g,.item .st .green{color:#4dff5e}
+.item .st .gold{color:#ffd84d}
+.item .st .grey{color:#a8a8a8}
+.item .st .ind{padding-left:12px}
+.item .st .sp{height:6px}
 .item .st .pend{color:var(--muted);font-size:12px}
 .item .row{display:flex;gap:10px;align-items:flex-start}
 .item .ico{flex:0 0 auto;width:44px;height:44px;display:grid;place-items:center;border-radius:6px;border:2px solid var(--qc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--qc) 22%,#1a1d22),#101215 75%);box-shadow:0 0 0 1px #000 inset,0 0 8px color-mix(in srgb,var(--qc) 35%,transparent);color:color-mix(in srgb,var(--qc) 55%,#e8e4da)}
@@ -594,25 +598,33 @@ const TT_SKIP = /^(物品等級|拾取後綁定|裝備後綁定|耐久|售價|�
 const TT_SLOT = /^(頭部|頸部|肩部|背部|胸部|手腕|手|腰部|腿部|腳|手指|飾品|主手|副手|單手|雙手|遠程|投擲|副手物品|聖物|背包)(\s|$)/;
 function ttLines(html){
   const box = document.createElement("div"); box.innerHTML = html;
-  const lines = []; let cur = {t:"", g:false};
-  const push = () => { const t = cur.t.replace(/\u0008/g, "").replace(/\s+/g, " ").trim(); if (t) lines.push({t, g:cur.g}); cur = {t:"", g:false}; };
-  const walk = (node, green) => {
+  const lines = []; let cur = {t:"", c:"", ind:false};
+  const push = () => { const t = cur.t.replace(/\u0008/g, "").replace(/\s+/g, " ").trim(); if (t) lines.push({t, c:cur.c, ind:cur.ind}); cur = {t:"", c:"", ind:false}; };
+  const colorOf = (el, c) => {
+    const cl = el.classList;
+    if (cl.contains("q2")) return "green";
+    if (cl.contains("q0")) return "grey";
+    if (cl.contains("q1")) return "";
+    if (cl.contains("q")) return "gold";
+    return c;
+  };
+  const walk = (node, c, ind) => {
     node.childNodes.forEach(n => {
-      if (n.nodeType === 3){ cur.t += n.nodeValue; if (green && n.nodeValue.trim()) cur.g = true; return; }
+      if (n.nodeType === 3){ if (n.nodeValue.trim()){ if (!cur.t.trim()){ cur.c = c; cur.ind = ind; } } cur.t += n.nodeValue; return; }
       if (n.nodeType !== 1) return;
-      const tag = n.tagName;
+      const tag = n.tagName, c2 = colorOf(n, c), ind2 = ind || n.classList.contains("indent");
       if (tag === "BR"){ push(); return; }
-      if (tag === "TR" || tag === "TABLE" || tag === "DIV"){ push(); walk(n, green || n.classList.contains("q2")); push(); return; }
-      if (tag === "TH" || tag === "TD"){ walk(n, green || n.classList.contains("q2")); cur.t += " "; return; }
-      walk(n, green || n.classList.contains("q2"));
+      if (tag === "TR" || tag === "TABLE" || tag === "DIV"){ push(); walk(n, c2, ind2); push(); return; }
+      if (tag === "TH" || tag === "TD"){ walk(n, c2, ind2); cur.t += " "; return; }
+      walk(n, c2, ind2);
     });
   };
-  walk(box, false); push();
+  walk(box, "", false); push();
   return lines;
 }
 async function fetchTip(id){
   if (TT_CACHE[id]) return TT_CACHE[id];
-  try { const c = sessionStorage.getItem("tt" + id); if (c) return (TT_CACHE[id] = JSON.parse(c)); } catch(e) {}
+  try { const c = sessionStorage.getItem("tt2_" + id); if (c) return (TT_CACHE[id] = JSON.parse(c)); } catch(e) {}
   const r = await fetch("https://nether.wowhead.com/tooltip/item/" + id + "?dataEnv=16&locale=10");
   if (!r.ok) throw new Error("http " + r.status);
   const j = await r.json();
@@ -624,12 +636,11 @@ async function fetchTip(id){
     if (m){ drop = m[1]; return; }
     if (TT_SKIP.test(l.t)) return;
     if (TT_SLOT.test(l.t)) return;
-    if (l.t === j.name) return;
     stats.push(l);
   });
   const out = {stats, drop};
   TT_CACHE[id] = out;
-  try { sessionStorage.setItem("tt" + id, JSON.stringify(out)); } catch(e) {}
+  try { sessionStorage.setItem("tt2_" + id, JSON.stringify(out)); } catch(e) {}
   return out;
 }
 let ttQueue = [], ttRunning = 0;
@@ -647,7 +658,15 @@ function fillTip(card, it, d){
   let ul = card.querySelector(".st");
   if (!ul){ ul = document.createElement("ul"); ul.className = "st"; card.querySelector(".row").after(ul); }
   ul.innerHTML = "";
-  d.stats.forEach(l => { const li = document.createElement("li"); li.textContent = l.t; if (l.g) li.className = "g"; ul.appendChild(li); });
+  let prev = "";
+  d.stats.forEach(l => {
+    const isSetName = l.c === "gold" && /\(\d+\/\d+\)/.test(l.t);
+    const isBonus = l.c === "grey" && /^\(\d+\)/.test(l.t);
+    if ((isSetName || (isBonus && !/^\(\d+\)/.test(prev))) && ul.children.length){ const sp = document.createElement("li"); sp.className = "sp"; ul.appendChild(sp); }
+    const li = document.createElement("li"); li.textContent = l.t;
+    li.className = [l.c, l.ind ? "ind" : "", (l.g ? "green" : "")].filter(Boolean).join(" ");
+    ul.appendChild(li); prev = l.t;
+  });
   if (d.drop){
     const it2 = card.querySelector(".it");
     if (it2 && !/掉落機率/.test(it2.textContent)) it2.textContent += "・掉落機率 " + d.drop;
@@ -809,22 +828,6 @@ function renderLoot(d){
       const ul = r.querySelector(".st");
       it.stats.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); });
       if (it.pending){ const li = document.createElement("li"); li.className = "pend"; li.textContent = "完整屬性和掉落機率待補"; ul.appendChild(li); }
-      if (it.chg){
-        const c = document.createElement("div"); c.className = "chg";
-        c.innerHTML = '<div class="ct">Forever 調整</div><ul></ul>';
-        const ul2 = c.querySelector("ul");
-        const list = /（原|新增|移除/.test(it.chg) ? chgItems(it.chg) : [{k:"", v:it.chg, kind:"same"}];
-        list.forEach(x => {
-          const li = document.createElement("li"); li.className = x.kind;
-          li.innerHTML = '<span class="k"></span><span class="v"></span><span class="o"></span>';
-          li.querySelector(".k").textContent = x.k;
-          li.querySelector(".v").textContent = (x.kind === "up" ? "▲ " : x.kind === "down" ? "▼ " : "") + x.v;
-          li.querySelector(".o").textContent = x.o ? "原 " + x.o : "";
-          if (!x.k) li.classList.add("wide");
-          ul2.appendChild(li);
-        });
-        r.appendChild(c);
-      }
       if (it.id) queueTip(it.id, r, it);
       if (!it.stats.length && !it.pending) r.querySelector(".st").remove();
       list.appendChild(r);
