@@ -45,6 +45,8 @@ header.top .sub{color:var(--muted);font-size:13px}
 
 .wrap{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 64px)}
 nav.list{border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px;background:var(--panel)}
+nav.list{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+nav.list::-webkit-scrollbar{width:8px}nav.list::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 nav.list button{all:unset;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:9px 12px;border-radius:8px;border-left:3px solid transparent}
 nav.list button:hover{background:var(--panel-2)}
 nav.list button[aria-current="true"]{background:var(--panel-2);border-left-color:var(--fac)}
@@ -206,7 +208,7 @@ footer .disc{color:#7d7c76}
 @media (max-width:1100px){.cols{grid-template-columns:1fr}}
 @media (max-width:760px){
   .wrap{grid-template-columns:1fr}
-  nav.list{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}
+  nav.list{position:static;max-height:none;overflow-y:hidden;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}
   nav.list button{flex:0 0 auto;border-left:0;border-bottom:3px solid transparent}
   nav.list button[aria-current="true"]{border-bottom-color:var(--fac)}
   .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
