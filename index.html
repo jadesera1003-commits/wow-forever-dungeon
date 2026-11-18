@@ -85,32 +85,32 @@ main{padding:20px 24px 48px;min-width:0}
 .cards{display:flex;flex-direction:column;gap:10px}
 .empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:8px}
 
-.q{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
-.c-direct .q,.q.c-direct{--c:var(--direct)}
-.c-inside .q,.q.c-inside{--c:var(--inside)}
-.c-chain .q,.q.c-chain{--c:var(--chain)}
-.q .cat{font-size:12px;font-weight:700;color:var(--c)}
-.q .qh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.q .t{display:block;font-size:16px;font-weight:700;line-height:1.35;text-wrap:balance}
-.q .en{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:1px}
-.q .lv{flex:0 0 auto;font-size:12px;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);white-space:nowrap}
-.q .lv b{color:var(--ink)}
-.q .info{display:grid;grid-template-columns:4.2em 1fr;gap:3px 10px;margin:0;font-size:13px;line-height:1.5}
-.q .info dt{color:var(--muted)}
-.q .info dd{margin:0;min-width:0;overflow-wrap:anywhere}
-.q .info .num{font-variant-numeric:tabular-nums}
-.q .note{margin:0;font-size:13px;line-height:1.6;color:var(--ink);opacity:.85}
-.q .blk{font-size:13px;line-height:1.6;padding:8px 10px;border-radius:6px;background:var(--panel-2)}
-.q .blk .lab{display:block;font-size:12px;font-weight:700;margin-bottom:2px}
-.q .src{border:1px solid color-mix(in srgb,var(--chain) 35%,var(--line))}
-.q .src .lab{color:var(--chain)}
-.q .src .sq{font-weight:700}
-.q .src .sw{display:block;color:var(--muted)}
-.q .src .path,.q .src .warn{display:block;font-size:12px;margin-top:4px}
-.q .src .path{color:var(--muted)}
-.q .src .warn{color:#e0a15f}
-.q .tip{border:1px solid color-mix(in srgb,var(--inside) 30%,var(--line))}
-.q .tip .lab{color:var(--inside)}
+.qcard{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.c-direct .qcard,.qcard.c-direct{--c:var(--direct)}
+.c-inside .qcard,.qcard.c-inside{--c:var(--inside)}
+.c-chain .qcard,.qcard.c-chain{--c:var(--chain)}
+.qcard .cat{font-size:12px;font-weight:700;color:var(--c)}
+.qcard .qh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.qcard .t{display:block;font-size:16px;font-weight:700;line-height:1.35;text-wrap:balance}
+.qcard .en{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:1px}
+.qcard .lv{flex:0 0 auto;font-size:12px;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.qcard .lv b{color:var(--ink)}
+.qcard .info{display:grid;grid-template-columns:4.2em 1fr;gap:3px 10px;margin:0;font-size:13px;line-height:1.5}
+.qcard .info dt{color:var(--muted)}
+.qcard .info dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.qcard .info .num{font-variant-numeric:tabular-nums}
+.qcard .note{margin:0;font-size:13px;line-height:1.6;color:var(--ink);opacity:.85}
+.qcard .blk{font-size:13px;line-height:1.6;padding:8px 10px;border-radius:6px;background:var(--panel-2)}
+.qcard .blk .lab{display:block;font-size:12px;font-weight:700;margin-bottom:2px}
+.qcard .src{border:1px solid color-mix(in srgb,var(--chain) 35%,var(--line))}
+.qcard .src .lab{color:var(--chain)}
+.qcard .src .sq{font-weight:700}
+.qcard .src .sw{display:block;color:var(--muted)}
+.qcard .src .path,.qcard .src .warn{display:block;font-size:12px;margin-top:4px}
+.qcard .src .path{color:var(--muted)}
+.qcard .src .warn{color:#e0a15f}
+.qcard .tip{border:1px solid color-mix(in srgb,var(--inside) 30%,var(--line))}
+.qcard .tip .lab{color:var(--inside)}
 .tag{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);margin-left:4px;vertical-align:1px}
 .tabs{display:flex;gap:4px;margin:0 0 16px;border-bottom:1px solid var(--line)}
 .tabs button{all:unset;cursor:pointer;padding:8px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
@@ -455,7 +455,7 @@ function add(el, cls, text){ const x = document.createElement("div"); x.classNam
 
 function card(q, showDungeon){
   const el = document.createElement("div");
-  el.className = "q c-" + q.c;
+  el.className = "qcard c-" + q.c;
   if (showDungeon) add(el, "cat", dName(q.d) + "・" + CAT[q.c]);
   const h = document.createElement("div"); h.className = "qh";
   h.innerHTML = '<div><span class="t"></span><span class="en"></span></div><span class="lv"><b>' + q.lv + '</b> 級可接</span>';
