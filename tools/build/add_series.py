@@ -40,13 +40,35 @@ def title(qid):
     t = (s[5] if qid in SER else s[4]) if s else ''
     return t.split(' ')[0] if t else ''
 
+# 沒抓到系列資料的步驟：人工判斷是否在副本內（依 Wowhead 任務目標）
+INST_FIX = {'389': False, '2361': False, '2339': True, '4735': True}
+
 def in_inst(qid):
+    if qid in INST_FIX: return INST_FIX[qid]
     s = SER.get(qid)
     if not s: return None
     z = s[2]
     if z and (z[0] in INST or z[1] == [0, 0]): return True
     obj = s[5].split(' ', 1)[-1]
     return any(n in obj for n in INST)
+
+INST_NAME_FIX = {'2339': '奧達曼', '4735': '黑石塔'}
+
+DNAME = {'rfc': '怒焰裂谷', 'wc': '哀嚎洞穴', 'dm': '死亡礦坑', 'sfk': '影牙城堡', 'stocks': '監獄', 'bfd': '黑澗深淵',
+         'gnomer': '諾姆瑞根', 'rfkraul': '剃刀沼澤', 'rfd': '剃刀高地', 'uld': '奧達曼', 'zf': '祖爾法拉克', 'mara': '瑪拉頓',
+         'st': '沉沒的神廟', 'brd': '黑石深淵', 'lbrs': '黑石塔', 'ubrs': '黑石塔', 'brs': '黑石塔', 'scholo': '通靈學院',
+         'strat': '斯坦索姆', 'strat-live': '斯坦索姆', 'strat-ud': '斯坦索姆', 'dmaul': '厄運之槌', 'dmaul-e': '厄運之槌',
+         'dmaul-w': '厄運之槌', 'dmaul-n': '厄運之槌', 'rfk-ruin': '羅德隆廢墟', 'dalaran': '達拉然城', 'drowned': '沉沒之城',
+         'alcaz': '奧卡茲監獄', 'blackmaw': '黑喉要塞', 'krol': '克羅多克要塞', 'dig': '挖掘場', 'thanes': '族長之廳'}
+
+def inst_name(qid):
+    if qid in INST_NAME_FIX: return INST_NAME_FIX[qid]
+    s = SER.get(qid)
+    if not s: return None
+    if s[2] and s[2][0] in INST: return s[2][0]
+    obj = s[5].split(' ', 1)[-1]
+    hits = [n for n in INST if n in obj]
+    return max(hits, key=len) if hits else None
 
 def rewards(qid):
     if qid in SER: return SER[qid][3], SER[qid][4]
@@ -98,7 +120,10 @@ def build(site, meta):
         for i, st in enumerate(steps):
             if st[3] == 'skip' or (st[3] == '' and i > p):
                 ii = in_inst(ids[i])
-                if i in again: st[3] = 'next'
+                other = inst_name(ids[i])
+                here = DNAME.get(meta[qid][0]) if qid in meta else inst_name(qid)
+                if ii and other and here and other != here and i > p: st[3] = 'go:' + other
+                elif i in again: st[3] = 'next'
                 elif ii is False: st[3] = 'out'
                 elif ii and i > p: st[3] = 'inside2'
                 elif st[3] == 'skip': st[3] = ''

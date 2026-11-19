@@ -10,7 +10,7 @@ JS = r'''
     qs.s.forEach(([id, n, rw, tg], i) => {
       if (i) ch.append(" → ");
       const s = document.createElement(i === qs.p ? "b" : "span"); s.textContent = (i === qs.p ? "▶" : "") + n + (rw && i > qs.p ? " 🎁" : "");
-      if (tg && i !== qs.p){ const t = document.createElement("small"); t.className = "stg"; t.textContent = STEP_TAG[tg] || ""; s.appendChild(t); }
+      if (tg && i !== qs.p){ const t = document.createElement("small"); t.className = "stg"; t.textContent = tg.startsWith("go:") ? "（要進" + tg.slice(3) + "）" : (STEP_TAG[tg] || ""); s.appendChild(t); }
       if (i < qs.p) s.className = "done";
       ch.appendChild(s);
     });
