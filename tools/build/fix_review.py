@@ -114,3 +114,11 @@ for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     for a, b in SRC2: h = h.replace(a, b)
     open(path, 'w', encoding='utf-8').write(h)
+
+# 新的瘟疫：Wowhead 沒有任何前置，改回直接接（之前的「致命配方」前置查無出處）
+NP_OLD = re.compile(r'\{d:"rfk-ruin",c:"chain",n:"新的瘟疫",.*?,id:95216\}')
+NP_NEW = '{d:"rfk-ruin",c:"direct",n:"新的瘟疫",en:"The New Plague",npc:"薩多雷·格雷夫",w:"幽暗城・藥劑師區 (46.6, 71.4)",lv:16,xp:5450,note:"從首領枯萎之牙拿劇毒菌株",id:95216}'
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    h = NP_OLD.sub(lambda m: NP_NEW, h)
+    open(path, 'w', encoding='utf-8').write(h)
