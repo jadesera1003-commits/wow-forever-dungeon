@@ -65,4 +65,4 @@ python3 tools/build/apply_dq.py index.html claude-artifact/index.html
 - `tools/build/fix_review.py`：套用 `review_notes.md` 的分類修正。
 - `data/quests/series_*.json`：系列資料 `[系列任務ID[], 交任務NPC, [區域,座標], 固定獎勵[], 擇一獎勵[], 目標]`。
 - `tools/build/patch_series_ui.py`（跑一次）＋ `tools/build/add_series.py`（可重複）：卡片上的「系列進度」——第幾步、後面哪一步有獎勵、要不要再進副本。
-- 建置順序：`add_deep.py` → `add_series.py` → `fix_review.py`（add_deep 會重建 RIT，所以 add_series 要在它後面）。
+- 建置順序：`add_ids.py` → `add_deep.py` → `add_series.py` → `fix_review.py` → `apply_fold.py`（add_deep 會重建 RIT，所以 add_series 要在它後面；apply_fold 套用摺疊排版，可重複執行）。

@@ -36,6 +36,15 @@ NOTE = {  # 補充說明（只寫有用的）
 }
 NOTE['8986'] = NOTE['8987'] = NOTE['8988'] = NOTE['8985']
 
+SER = {}
+for f in glob.glob(P('data/quests/series_*.json')): SER.update(json.load(open(f, encoding='utf-8')))
+A_KW = ['達納蘇斯', '鐵爐堡', '暴風城', '塞拉摩', '羽月要塞', '尼耶爾前哨站', '米奈希爾港', '冰風營地', '遠境堡']
+H_KW = ['奧格瑪', '雷霆崖', '幽暗城', '長者高地', '莫沙徹營地', '卡加斯', '亡靈壁壘', '羅格瑪', '葬影村', '布瑞爾']
+def side_of(x):
+    t = (D.get(x) or ['', '', '', '', ''])[4] + ' ' + ((SER.get(x) or [0, 0, ['']])[2] or [''])[0]
+    a = any(k in t for k in A_KW); h = any(k in t for k in H_KW)
+    return 'A' if a and not h else 'H' if h and not a else ''
+
 def title(v):
     return v[4].split(' ')[0] if v and v[4] else ''
 
@@ -68,7 +77,9 @@ for path in [P('index.html'), P('claude-artifact', 'index.html')]:
         for x in v[1]:
             x = str(x)
             tag = 'main' if x in site else TAG.get(x, 'next')
-            u.append([int(x), title(D.get(x)) or ('任務 #' + x), tag, NOTE.get(x, '')])
+            dx = D.get(x) or ['', '', [], [], '']
+            used |= set(map(str, dx[2] + dx[3]))
+            u.append([int(x), title(D.get(x)) or ('任務 #' + x), tag, NOTE.get(x, ''), side_of(x), dx[2], dx[3]])
         if u: e['u'] = u
         if e: QX[qid] = e
     RIT = {k: ITEMS[k] for k in sorted(used, key=int) if k in ITEMS}

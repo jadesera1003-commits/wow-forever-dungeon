@@ -1,7 +1,7 @@
-"""產生排版預覽版：摺疊卡片（A）＋獎勵只顯示圖示（C）。輸出 preview/index.html。"""
+"""套用正式排版：分組清單、任務預設收成一行、獎勵只顯示圖示（可重複執行，以 FOLD-BEGIN/END 標記）。"""
 import os
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CSS = '''
+CSS = '''/*FOLD-BEGIN*/
 .qcard.fold{gap:4px;cursor:default}
 .qcard.fold .qh{cursor:pointer}
 .qcard .sum{font-size:13px;color:var(--muted);cursor:pointer}
@@ -32,10 +32,10 @@ CSS = '''
 .col h3{margin-bottom:6px}
 .cards{gap:6px!important}
 .qcard.fold{padding:9px 12px}
-.pvbar{background:#ffb34722;border:1px solid #ffb34766;color:var(--ink);font-size:13px;padding:8px 12px;border-radius:8px;margin:0 0 12px}
-'''
+.pvbar{display:none}
+/*FOLD-END*/'''
 JS = r'''
-<script>
+<script id="fold-js">
 (function(){
   const _card = card;
   function chips(q){
@@ -77,7 +77,7 @@ JS = r'''
     const tog = document.createElement("div"); tog.className = "tog"; tog.textContent = "▾ 展開";
     el.append(sum, ch, tog, det);
     el.classList.add("fold");
-    det.querySelectorAll(".blk.rew,.blk.ser").forEach(compact);
+    det.querySelectorAll(".blk.rew,.blk.ser,.blk.unl").forEach(b => { if (b.querySelector(".ri")) compact(b); });
     const flip = () => { el.classList.toggle("open"); tog.textContent = el.classList.contains("open") ? "▴ 收合" : "▾ 展開"; };
     [head, sum, ch, tog].forEach(x => x.addEventListener("click", flip));
     return el;
@@ -86,20 +86,21 @@ JS = r'''
   renderDungeon = function(){
     _rd();
     const cols = main.querySelector(".cols"); if (!cols) return;
-    const bar = document.createElement("div"); bar.className = "pvbar"; bar.textContent = "排版預覽：分組清單，任務預設收成一行，點一下展開；獎勵只顯示圖示。這是測試頁，正式版不受影響。";
     const b = document.createElement("button"); b.className = "expall"; b.textContent = "全部展開";
     b.onclick = () => { const open = b.textContent === "全部展開"; main.querySelectorAll(".qcard.fold").forEach(c => { c.classList.toggle("open", open); const t = c.querySelector(".tog"); if (t) t.textContent = open ? "▴ 收合" : "▾ 展開"; }); b.textContent = open ? "全部收合" : "全部展開"; };
-    cols.before(bar, b);
+    cols.before(b);
   };
   render();
 })();
 </script>
 '''
-for src, dst in [('index.html', 'preview/index.html'), ('claude-artifact/index.html', 'preview/claude.html')]:
-    h = open(os.path.join(ROOT, src), encoding='utf-8').read()
+import re
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    h = re.sub(r'/\*FOLD-BEGIN\*/.*?/\*FOLD-END\*/', '', h, flags=re.S)
+    h = re.sub(r'\n<script id="fold-js">.*?</script>\n', '', h, flags=re.S)
     h = h.replace('</style>', CSS + '</style>', 1)
     i = h.rindex('</body>')
     h = h[:i] + JS + h[i:]
-    os.makedirs(os.path.join(ROOT, 'preview'), exist_ok=True)
-    open(os.path.join(ROOT, dst), 'w', encoding='utf-8').write(h)
-    print(dst)
+    open(path, 'w', encoding='utf-8').write(h)
+    print(p, 'fold layout applied')

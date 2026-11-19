@@ -21,12 +21,22 @@ JS = r'''
     }
     if (qx.u){
       const u = document.createElement("div"); u.className = "blk unl"; add(u, "lab", "後續解鎖");
-      qx.u.forEach(([id, n, tag, note]) => {
+      qx.u.filter(e => !e[4] || !who.f || e[4] === who.f).forEach(([id, n, tag, note, sd, ug, uc]) => {
         const line = add(u, "ul", "");
         const c = document.createElement("span"); c.className = "tag t-" + tag; c.textContent = UNL_TAG[tag] || "後續"; line.appendChild(c);
         const a = document.createElement("a"); a.href = "https://www.wowhead.com/forever/tw/quest=" + id; a.target = "_blank"; a.rel = "noopener"; a.textContent = n; line.appendChild(a);
         if (note){ const s = document.createElement("span"); s.className = "un"; s.textContent = note; line.appendChild(s); }
         if (tag === "main" && QFOLD[id] && QX[id] && QX[id].o){ const s = document.createElement("div"); s.className = "uo"; s.textContent = QX[id].o; u.appendChild(s); }
+        [[ug, "固定給"], [uc, "擇一"]].forEach(([ids, lab]) => {
+          if (!ids || !ids.length) return;
+          const w2 = add(u, "rg", ""); add(w2, "rl", lab);
+          ids.forEach(iid => { const it = RIT[iid]; const a = document.createElement("a");
+            a.className = "ri q" + (it ? it[1] : 1); a.href = "https://www.wowhead.com/forever/tw/item=" + iid; a.target = "_blank"; a.rel = "noopener";
+            a.textContent = it ? it[0].replace(/^\[(.*)\]$/, "$1") : ("物品 #" + iid);
+            if (it && it[2]){ const s = document.createElement("span"); s.className = "rt"; s.textContent = it[2]; a.appendChild(s); }
+            const ok = rewUse(it && it[2], q.lv); if (ok === false) a.classList.add("no"); else if (ok === true) a.classList.add("ok");
+            w2.appendChild(a); });
+        });
       });
       el.appendChild(u);
     }
