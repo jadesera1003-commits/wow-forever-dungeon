@@ -18,6 +18,14 @@ CSS = '''
 .rw-c .ri:not(:has(.iconmedium,.iconsmall,span[class^=icon]))::before{content:attr(data-a);font-size:13px;font-weight:700;color:var(--qc);width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--qc);border-radius:5px}
 .rw-c .ri.no{opacity:.35}
 .rw-c .hint{font-size:11.5px;color:var(--muted);margin-top:2px}
+.cols{grid-template-columns:minmax(0,1fr)!important;display:grid;gap:14px}
+.col .cards{gap:6px}
+.qcard.fold:not(.open){padding:8px 12px}
+.qcard.fold:not(.open) .sum,.qcard.fold:not(.open) .tog{display:none}
+.qcard.fold:not(.open) .qh .en{display:none}
+.qcard.fold:not(.open) .qh .t{font-size:15px}
+.qcard.fold .qh::after{content:"▾";color:var(--muted);font-size:12px;margin-left:6px;align-self:center}
+.qcard.fold.open .qh::after{content:"▴"}
 .expall{margin:0 0 10px;font-size:13px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer}
 .cols{grid-template-columns:1fr!important;max-width:760px}
 .col .desc{display:none}
@@ -78,7 +86,7 @@ JS = r'''
   renderDungeon = function(){
     _rd();
     const cols = main.querySelector(".cols"); if (!cols) return;
-    const bar = document.createElement("div"); bar.className = "pvbar"; bar.textContent = "排版預覽：卡片預設收合、獎勵只顯示圖示。這是測試頁，正式版不受影響。";
+    const bar = document.createElement("div"); bar.className = "pvbar"; bar.textContent = "排版預覽：分組清單，任務預設收成一行，點一下展開；獎勵只顯示圖示。這是測試頁，正式版不受影響。";
     const b = document.createElement("button"); b.className = "expall"; b.textContent = "全部展開";
     b.onclick = () => { const open = b.textContent === "全部展開"; main.querySelectorAll(".qcard.fold").forEach(c => { c.classList.toggle("open", open); const t = c.querySelector(".tog"); if (t) t.textContent = open ? "▴ 收合" : "▾ 展開"; }); b.textContent = open ? "全部收合" : "全部展開"; };
     cols.before(bar, b);
