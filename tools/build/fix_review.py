@@ -102,3 +102,15 @@ for p in ['index.html', 'claude-artifact/index.html']:
             for k, v in ATTR[int(m.group(1))].items(): L = setattr_line(L, k, v)
             if L != lines[i]: lines[i] = L; n += 1
     open(path, 'w', encoding='utf-8').write('\n'.join(lines)); print(p, 'class/race/side', n)
+
+# 羅德隆廢墟兩個前置：Wowhead 任務頁沒列「要求」，依玩家回報保留，補上中文名稱與 NPC
+SRC2 = [
+ ('src:{q:"A Recipe for Death（任務鏈）",npc:"NPC 待查",w:"Wowhead 尚未標出起點",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"}',
+  'src:{q:"致命配方（3 步）",npc:"藥劑師倫弗利爾",w:"提里斯法林地・布瑞爾",path:"致命配方 ×3（倫弗利爾 ↔ 幽暗城的大藥劑師法拉尼爾）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}'),
+ ('src:{q:"Rear Guard Patrol（兩段）",npc:"NPC 待查",w:"提里斯法林地",path:"要先打掉提里斯法林地的 13 級精英 Riptear",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"}',
+  'src:{q:"巡查後方（2 步）",npc:"亡靈衛兵林奈",w:"提里斯法林地・布瑞爾",path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}'),
+]
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    for a, b in SRC2: h = h.replace(a, b)
+    open(path, 'w', encoding='utf-8').write(h)

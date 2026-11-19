@@ -28,8 +28,9 @@ JS = r'''
       if (q.c === "chain" && q.src){
         const steps = (q.src.path || "").split("→").length;
         const prev = (q.id && QS[q.id]) ? QS[q.id].p : 0;
-        if (steps >= 4 || prev >= 3 || q.src.warn) { long.push(q); return; }
-        put(q.src.w, "先做「" + q.src.q + "」（才能接「" + q.n + "」）");
+        if (steps >= 4 || prev >= 3) { long.push(q); return; }
+        const who2 = q.src.npc && !/待查/.test(q.src.npc) ? "找" + q.src.npc + "接" : "先接";
+        put(q.src.w, who2 + "「" + q.src.q + "」，做完才能接「" + q.n + "」");
         put(q.w, "接「" + q.n + "」");
         deps.push([zkey(q.src.w), zkey(q.w)]);
       } else put(q.w, "接「" + q.n + "」");
