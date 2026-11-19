@@ -130,12 +130,13 @@ for p in ['index.html', 'claude-artifact/index.html']:
 
 # 玩家在遊戲內確認需要前置（Wowhead 任務頁沒列）
 CONFIRMED = [94968, 94972, 94975]
-CW = 'Wowhead 任務頁沒列這個前置，已在遊戲內確認需要'
+CW = '要先做完整條劇情系列才會開放（Wowhead 沒列，已在遊戲內確認）'
 for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); lines = open(path, encoding='utf-8').read().split('\n')
     for i, L in enumerate(lines):
         m = re.search(r',id:(\d+)[,}]', L)
         if not (L.startswith('  {d:') and m and int(m.group(1)) in CONFIRMED) or CW in L: continue
+        L = L.replace(',warn:"Wowhead 任務頁沒列這個前置，已在遊戲內確認需要"', '')
         a = L.find('src:{'); d = 0
         for j in range(a + 4, len(L)):
             if L[j] == '{': d += 1
