@@ -161,3 +161,17 @@ for p in ['index.html', 'claude-artifact/index.html']:
         if L.startswith('  {d:') and m and int(m.group(1)) in TO_DIRECT and 'c:"skip"' in L:
             lines[i] = '  ' + TO_DIRECT[int(m.group(1))] + (',' if L.rstrip().endswith(',') else '')
     open(path, 'w', encoding='utf-8').write('\n'.join(lines))
+
+# 深入血色修道院：拆到三個區各列一次（直接接），提示這區要殺誰
+SM_OLD = '  {d:"sm-all",c:"skip",n:"深入血色修道院",en:"Into The Scarlet Monastery",reason:"要打圖書館、軍械庫、大教堂三個區，一趟做不完",id:1048},'
+SM_BASE = 'c:"direct",n:"深入血色修道院",en:"Into The Scarlet Monastery",npc:"瓦里瑪薩斯",w:"幽暗城・皇家區 (56.2, 92.6)",lv:42,'
+SM_NEW = '\n'.join([
+ '  {d:"sm-lib",' + SM_BASE + 'tip:"要分三區做完：這區殺馴犬者洛克希；軍械庫殺赫洛德；大教堂殺莫格萊尼和懷特邁恩",id:1048},',
+ '  {d:"sm-arm",' + SM_BASE + 'tip:"要分三區做完：這區殺赫洛德；圖書館殺馴犬者洛克希；大教堂殺莫格萊尼和懷特邁恩",id:1048},',
+ '  {d:"sm-cath",' + SM_BASE + 'tip:"要分三區做完：這區殺莫格萊尼和懷特邁恩；圖書館殺馴犬者洛克希；軍械庫殺赫洛德",id:1048},'])
+QS_OLD = 'reason:"鑄造奎爾塞拉第 2 步要奧妮克希亞的材料"'
+QS_NEW = 'reason:"要到奧妮克希亞的巢穴（團隊副本）讓奧妮克希亞對劍噴火，不是五人副本的目標"'
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    h = h.replace(SM_OLD, SM_NEW).replace(QS_OLD, QS_NEW)
+    open(path, 'w', encoding='utf-8').write(h)
