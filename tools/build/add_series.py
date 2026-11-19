@@ -22,6 +22,7 @@ for f in glob.glob(P('data/quests/details*.json')):
 DEEP = {}
 for f in glob.glob(P('data/quests/deep_[0-9]*.json')) + glob.glob(P('data/quests/deep_heads*.json')): DEEP.update(load(f))
 ITEMS = load(P('data/items/reward_items.json'))
+NAMES = load(P('data/quests/quest_names.json'))
 
 INST = ['黑澗深淵', '奧達曼', '剃刀高地', '剃刀沼澤', '黑石深淵', '黑石塔', '斯坦索姆', '通靈學院', '厄運之槌',
         '血色修道院', '奧卡茲監獄', '挖掘場', '克羅多克要塞', '沉沒的神廟', '阿塔哈卡神廟', '瑪拉頓', '諾姆瑞根',
@@ -70,7 +71,7 @@ def build(site):
         p = ids.index(qid)
         steps = []
         for i, x in enumerate(ids):
-            n = title(x) or (names[i] if names else '') or ('任務 #' + x)
+            n = title(x) or (names[i] if names else '') or NAMES.get(x) or ('任務 #' + x)
             g, c = rewards(x)
             steps.append([int(x), n, 1 if (g or c) else 0])
         later = []
