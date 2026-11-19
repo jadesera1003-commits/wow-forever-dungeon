@@ -75,3 +75,28 @@ for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     for a, b in WORD2.items(): h = h.replace(a, b)
     open(path, 'w', encoding='utf-8').write(h)
+
+# 依 Wowhead 區域任務清單（data/quests/zone_flags.json）補上職業／種族／陣營限制
+PAL = ["聖騎士"]; HD = ["人類", "矮人"]
+ATTR = {
+ 79946: {'cls': PAL, 'race': HD}, 79963: {'cls': PAL, 'race': HD}, 79970: {'cls': PAL, 'race': HD},
+ 84318: {'cls': PAL, 'race': HD}, 84319: {'cls': PAL, 'race': HD}, 84330: {'cls': PAL},
+ 7643: {'cls': PAL, 'race': HD}, 7644: {'cls': PAL, 'race': HD}, 7647: {'cls': PAL, 'race': HD},
+ 5127: {'cls': ["戰士", "聖騎士"]}, 5103: {'cls': ["戰士", "聖騎士", "薩滿"]}, 7463: {'cls': ["法師"]},
+ 8990: {'cls': ["戰士", "盜賊"]}, 8968: {'cls': ["獵人", "盜賊"]}, 7509: {'cls': ["戰士", "聖騎士"]},
+ 2951: {'side': "B"}, 95789: {'side': "B"},
+}
+def setattr_line(L, key, val):
+    js = json.dumps(val, ensure_ascii=False).replace(', ', ',') if not isinstance(val, str) else '"%s"' % val
+    pat = re.compile(r',%s:(\[[^\]]*\]|"[^"]*")' % key)
+    if pat.search(L): return pat.sub(',%s:%s' % (key, js), L, count=1)
+    return re.sub(r',id:(\d+)', lambda m: ',%s:%s,id:%s' % (key, js, m.group(1)), L, count=1)
+import json
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); lines = open(path, encoding='utf-8').read().split('\n'); n = 0
+    for i, L in enumerate(lines):
+        m = re.search(r',id:(\d+)[,}]', L)
+        if L.startswith('  {d:') and m and int(m.group(1)) in ATTR:
+            for k, v in ATTR[int(m.group(1))].items(): L = setattr_line(L, k, v)
+            if L != lines[i]: lines[i] = L; n += 1
+    open(path, 'w', encoding='utf-8').write('\n'.join(lines)); print(p, 'class/race/side', n)
