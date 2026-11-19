@@ -175,3 +175,15 @@ for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     h = h.replace(SM_OLD, SM_NEW).replace(QS_OLD, QS_NEW)
     open(path, 'w', encoding='utf-8').write(h)
+
+# 沉沒之城兩個任務的前置：Wowhead 玩家留言確認
+DC = [
+ ('src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → 古拉巴什古代傳說 → 定位失落之城 → 本任務"}',
+  'src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → 古拉巴什古代傳說 → 定位失落之城 → 本任務",warn:"Wowhead 任務頁沒列，玩家留言確認要先做完這條"}'),
+ ('src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → … → 水中的敵人（指揮官阿格羅戈西）→ 本任務；也要先完成肯維雷的「定位失落之城」"}',
+  'src:{q:"暗礁海",npc:"肯維雷",w:"荊棘谷・格羅姆高 (32.2, 27.8)",path:"暗礁海 → 古拉巴什古代傳說 → 水中的敵人（找指揮官阿格羅戈西接）→ 本任務；也要先做完肯維雷的「定位失落之城」",warn:"Wowhead 任務頁沒列，玩家留言確認。「水中的敵人」在水下打納迦收 10 把三叉戟，掉率低，建議先買水下呼吸藥水"}'),
+]
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    for a, b in DC: h = h.replace(a, b)
+    open(path, 'w', encoding='utf-8').write(h)
