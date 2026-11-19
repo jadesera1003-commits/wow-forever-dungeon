@@ -147,3 +147,17 @@ for p in ['index.html', 'claude-artifact/index.html']:
         seg = re.sub(r',\s*"?warn"?:\s*"[^"]*"', '', seg)
         lines[i] = L[:a] + seg + ',warn:"' + CW + '"' + L[j:]
     open(path, 'w', encoding='utf-8').write('\n'.join(lines))
+
+# 進副本前就能接、只是要多跑幾趟的收集任務：放回「直接接」，多趟寫在提示裡
+TO_DIRECT = {
+ 3042: '{d:"zf",c:"direct",side:"B",n:"食人妖調和劑",en:"Troll Temper",npc:"特倫頓·輕錘",w:"塔納利斯・加基森 (51.4, 28.6)",lv:45,tip:"食人妖調和劑 ×20 掉率普通，玩家回報要打兩趟才收齊",id:3042}',
+ 95789: '{d:"drowned",c:"direct",side:"B",n:"被陰的鹽占海盜",en:"Shady Saltseers",npc:"克拉茲克",w:"荊棘谷・藏寶海灣 (27.0, 77.2)",lv:40,tip:"巫毒灌注神器 ×10 掉率很低，5 人一趟大約只拿到一半，通常要打兩趟",id:95789}',
+ 96988: '{d:"dalaran",c:"direct",side:"H",n:"力量的泉源",en:"Source of Power",npc:"馬丁·費爾本",w:"幽暗城 (46.6, 74.4)",lv:33,tip:"碎裂的哨兵核心 ×6 掉得少，五人隊要跑 2–3 趟才夠",id:96988}',
+}
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); lines = open(path, encoding='utf-8').read().split('\n')
+    for i, L in enumerate(lines):
+        m = re.search(r',id:(\d+)[,}]', L)
+        if L.startswith('  {d:') and m and int(m.group(1)) in TO_DIRECT and 'c:"skip"' in L:
+            lines[i] = '  ' + TO_DIRECT[int(m.group(1))] + (',' if L.rstrip().endswith(',') else '')
+    open(path, 'w', encoding='utf-8').write('\n'.join(lines))
