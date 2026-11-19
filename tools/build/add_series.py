@@ -71,9 +71,10 @@ def inst_name(qid):
     return max(hits, key=len) if hits else None
 
 def rewards(qid):
-    if qid in SER: return SER[qid][3], SER[qid][4]
-    if qid in DEEP: return DEEP[qid][2], DEEP[qid][3]
-    return [], []
+    if qid in SER: g, c = SER[qid][3], SER[qid][4]
+    elif qid in DEEP: g, c = DEEP[qid][2], DEEP[qid][3]
+    else: return [], []
+    return [x for x in g if x not in c], c
 
 def build(site, meta):
     QS, used, FOLD = {}, set(), {}

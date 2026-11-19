@@ -71,13 +71,15 @@ for path in [P('index.html'), P('claude-artifact', 'index.html')]:
         e = {}
         o = objective(v)
         if o: e['o'] = o
-        if v[2]: e['g'] = v[2]; used |= set(map(str, v[2]))
+        give = [x for x in v[2] if x not in v[3]]  # Wowhead 有時把擇一物品也列在「還會收到」，以擇一為準
+        if give: e['g'] = give; used |= set(map(str, give))
         if v[3]: e['c'] = v[3]; used |= set(map(str, v[3]))
         u = []
         for x in v[1]:
             x = str(x)
             tag = 'main' if x in site else TAG.get(x, 'next')
             dx = D.get(x) or ['', '', [], [], '']
+            dx = dx[:2] + [[i for i in dx[2] if i not in dx[3]]] + dx[3:]
             used |= set(map(str, dx[2] + dx[3]))
             u.append([int(x), title(D.get(x)) or ('任務 #' + x), tag, NOTE.get(x, ''), side_of(x), dx[2], dx[3]])
         if u: e['u'] = u
