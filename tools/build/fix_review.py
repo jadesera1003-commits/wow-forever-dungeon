@@ -31,3 +31,20 @@ for p in ['index.html', 'claude-artifact/index.html']:
     for a, b in FIX:
         if a in h: h = h.replace(a, b); n += 1
     open(path, 'w', encoding='utf-8').write(h); print(p, 'fixed', n)
+
+# 同一個副本裡名稱重複的任務：名稱後面補說明，避免混淆
+import re
+RENAME = {
+ 3982: '出了什麼事？（第 2 步：保護哥沙克）', 4001: '出了什麼事？（第 3 步：找卡蘭、回報索爾）',
+ 6521: '邪惡的盟友（交瑪克林大使的頭）', 6522: '邪惡的盟友（交小卷軸）',
+ 5463: '米奈希爾的禮物（在斯坦索姆放遺物）', 5464: '米奈希爾的禮物（交禁錮靈魂的遺物）',
+ 96376: '國家機密（奧格瑪接）', 96377: '國家機密（暴風城接）', 96379: '國家機密（荊棘谷接，兩陣營）',
+}
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); lines = open(path, encoding='utf-8').read().split('\n'); n = 0
+    for i, L in enumerate(lines):
+        m = re.search(r',id:(\d+)[,}]', L)
+        if L.startswith('  {d:') and m and int(m.group(1)) in RENAME:
+            new = re.sub(r'([{,]n:")[^"]+(")', lambda mm: mm.group(1) + RENAME[int(m.group(1))] + mm.group(2), L, count=1)
+            if new != L: lines[i] = new; n += 1
+    open(path, 'w', encoding='utf-8').write('\n'.join(lines)); print(p, 'renamed', n)
