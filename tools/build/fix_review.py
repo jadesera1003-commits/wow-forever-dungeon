@@ -85,6 +85,8 @@ ATTR = {
  5127: {'cls': ["戰士", "聖騎士"]}, 5103: {'cls': ["戰士", "聖騎士", "薩滿"]}, 7463: {'cls': ["法師"]},
  8990: {'cls': ["戰士", "盜賊"]}, 8968: {'cls': ["獵人", "盜賊"]}, 7509: {'cls': ["戰士", "聖騎士"]},
  2951: {'side': "B"}, 95789: {'side': "B"},
+ # 經典版 Wowhead 標「獸人、牛頭人、食人妖」，不死族不能接；Forever 頁面沒標，保留天裔精靈
+ 1049: {'race': ["獸人", "牛頭人", "食人妖", "天裔精靈"], 'tip': "不死族不能接（經典版限制，Wowhead Forever 頁面沒標示）"},
 }
 def setattr_line(L, key, val):
     js = json.dumps(val, ensure_ascii=False).replace(', ', ',') if not isinstance(val, str) else '"%s"' % val
