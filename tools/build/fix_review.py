@@ -48,3 +48,24 @@ for p in ['index.html', 'claude-artifact/index.html']:
             new = re.sub(r'([{,]n:")[^"]+(")', lambda mm: mm.group(1) + RENAME[int(m.group(1))] + mm.group(2), L, count=1)
             if new != L: lines[i] = new; n += 1
     open(path, 'w', encoding='utf-8').write('\n'.join(lines)); print(p, 'renamed', n)
+
+# 「不共享」有兩種意思，分開寫清楚
+WORD = [
+ ('note:"採毒蛇花 ×10，不共享"', 'note:"採毒蛇花 ×10，每人要各自採（不共享）"'),
+ ('note:"變異皮革 ×20，不共享"', 'note:"變異皮革 ×20，每人要各自撿（不共享）"'),
+ ('note:"哀嚎香精 ×6，不共享"', 'note:"哀嚎香精 ×6，每人要各自撿（不共享）"'),
+ ('reason:"碎裂的哨兵核心 ×6 不共享，五人隊要跑 2–3 趟"', 'reason:"碎裂的哨兵核心 ×6 每人要各自撿（不共享），五人隊要跑 2–3 趟"'),
+ ('note:"學習石頭守護者看守的知識，不共享"', 'note:"學習石頭守護者看守的知識，每人要各自對話（進度不共享）"'),
+ ('，進橘色區對地上的紅色小芽使用，不共享"', '，進橘色區對地上的紅色小芽使用，每人要各自做（進度不共享）"'),
+ ('note:"接在「瑪拉頓的傳說」之後，不共享"', 'note:"接在「瑪拉頓的傳說」之後，每人要各自做（進度不共享）"'),
+ ('note:"聯合墜飾＋靈魂墜飾，不共享"', 'note:"聯合墜飾＋靈魂墜飾，每人要各自撿（不共享）"'),
+ ('note:"交給月光林地的守護者雷姆洛斯，不共享"', 'note:"交給月光林地的守護者雷姆洛斯，生命之種每人各自撿（不共享）"'),
+ ('tip:"不可共享",side:"H",id:96376}', 'tip:"任務不能分享給隊友，每人自己去接",side:"H",id:96376}'),
+ ('tip:"不可共享",side:"A",id:96377}', 'tip:"任務不能分享給隊友，每人自己去接",side:"A",id:96377}'),
+ ('tip:"兩個陣營都能接，不可共享",side:"B",id:96379}', 'tip:"兩個陣營都能接；任務不能分享給隊友，每人自己去接",side:"B",id:96379}'),
+]
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read(); n = 0
+    for a, b in WORD:
+        if a in h: h = h.replace(a, b); n += 1
+    open(path, 'w', encoding='utf-8').write(h); print(p, 'share wording', n)
