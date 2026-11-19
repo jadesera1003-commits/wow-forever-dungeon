@@ -14,6 +14,17 @@ D = {}
 for f in sorted(glob.glob(P('data/quests/deep_[0-9]*.json'))) + sorted(glob.glob(P('data/quests/deep_heads*.json'))):
     D.update(json.load(open(f, encoding='utf-8')))
 ITEMS = json.load(open(P('data/items/reward_items.json'), encoding='utf-8'))
+DET = {}
+for f in glob.glob(P('data/quests/details*.json')):
+    d = json.load(open(f, encoding='utf-8'))
+    if isinstance(d, dict): DET.update(d)
+# Wowhead 標「本任務不可共享」；SHARE_FIX 放玩家實測的修正（True＝可以分享）
+SHARE_FIX = {}
+def no_share(qid):
+    if qid in SHARE_FIX: return not SHARE_FIX[qid]
+    v = DET.get(qid)
+    if v is None: return None
+    return bool(v.get('ns') if isinstance(v, dict) else v[7])
 
 # 後續解鎖的重要程度（人工判斷：依任務內容與 Wowhead 頁面）
 #   main = 副本任務（本站有收錄）  imp = 重要系列  gear = 後續有裝備獎勵  end = 收尾／送信對話  next = 一般後續
@@ -74,6 +85,7 @@ for path in [P('index.html'), P('claude-artifact', 'index.html')]:
         give = [x for x in v[2] if x not in v[3]]  # Wowhead 有時把擇一物品也列在「還會收到」，以擇一為準
         if give: e['g'] = give; used |= set(map(str, give))
         if v[3]: e['c'] = v[3]; used |= set(map(str, v[3]))
+        if no_share(qid): e['ns'] = 1
         u = []
         for x in v[1]:
             x = str(x)

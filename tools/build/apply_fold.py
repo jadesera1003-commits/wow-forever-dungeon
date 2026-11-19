@@ -52,6 +52,7 @@ JS = r'''
       out.push(["獎勵在第 " + (qs.r[qs.r.length - 1][0] + 1) + " 步", "g"]);
     } else if (qs) out.push(["整串只有經驗", ""]);
     if (qs && qs.a.length) out.push(["要再進副本", "w"]);
+    if (qx && qx.ns) out.push(["不能分享", "w"]);
     return out;
   }
   function compact(blk){

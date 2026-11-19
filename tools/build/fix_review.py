@@ -69,3 +69,9 @@ for p in ['index.html', 'claude-artifact/index.html']:
     for a, b in WORD:
         if a in h: h = h.replace(a, b); n += 1
     open(path, 'w', encoding='utf-8').write(h); print(p, 'share wording', n)
+
+WORD2 = {'note:"採毒蛇花 ×10，每人要各自採（不共享）"': 'note:"採毒蛇花 ×10"', 'note:"變異皮革 ×20，每人要各自撿（不共享）"': 'note:"變異皮革 ×20"', 'note:"哀嚎香精 ×6，每人要各自撿（不共享）"': 'note:"哀嚎香精 ×6"', 'reason:"碎裂的哨兵核心 ×6 每人要各自撿（不共享），五人隊要跑 2–3 趟"': 'reason:"碎裂的哨兵核心 ×6 掉得少，五人隊要跑 2–3 趟才夠"', 'note:"學習石頭守護者看守的知識，每人要各自對話（進度不共享）"': 'note:"學習石頭守護者看守的知識"', '，進橘色區對地上的紅色小芽使用，每人要各自做（進度不共享）"': '，進橘色區對地上的紅色小芽使用"', 'note:"接在「瑪拉頓的傳說」之後，每人要各自做（進度不共享）"': 'note:"接在「瑪拉頓的傳說」之後"', 'note:"聯合墜飾＋靈魂墜飾，每人要各自撿（不共享）"': 'note:"聯合墜飾＋靈魂墜飾"', 'note:"交給月光林地的守護者雷姆洛斯，生命之種每人各自撿（不共享）"': 'note:"交給月光林地的守護者雷姆洛斯"', 'tip:"任務不能分享給隊友，每人自己去接",side:"H",id:96376}': 'side:"H",id:96376}', 'tip:"任務不能分享給隊友，每人自己去接",side:"A",id:96377}': 'side:"A",id:96377}', 'tip:"兩個陣營都能接；任務不能分享給隊友，每人自己去接",side:"B",id:96379}': 'tip:"兩個陣營都能接",side:"B",id:96379}'}
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    for a, b in WORD2.items(): h = h.replace(a, b)
+    open(path, 'w', encoding='utf-8').write(h)
