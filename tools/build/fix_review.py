@@ -127,3 +127,22 @@ for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     h = h.replace('path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}', 'path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，已在遊戲內確認需要"}')
     open(path, 'w', encoding='utf-8').write(h)
+
+# 玩家在遊戲內確認需要前置（Wowhead 任務頁沒列）
+CONFIRMED = [94968, 94972, 94975]
+CW = 'Wowhead 任務頁沒列這個前置，已在遊戲內確認需要'
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); lines = open(path, encoding='utf-8').read().split('\n')
+    for i, L in enumerate(lines):
+        m = re.search(r',id:(\d+)[,}]', L)
+        if not (L.startswith('  {d:') and m and int(m.group(1)) in CONFIRMED) or CW in L: continue
+        a = L.find('src:{'); d = 0
+        for j in range(a + 4, len(L)):
+            if L[j] == '{': d += 1
+            elif L[j] == '}':
+                d -= 1
+                if d == 0: break
+        seg = L[a:j]
+        seg = re.sub(r',\s*"?warn"?:\s*"[^"]*"', '', seg)
+        lines[i] = L[:a] + seg + ',warn:"' + CW + '"' + L[j:]
+    open(path, 'w', encoding='utf-8').write('\n'.join(lines))
