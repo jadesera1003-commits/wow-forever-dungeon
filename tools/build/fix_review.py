@@ -187,3 +187,13 @@ for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     for a, b in DC: h = h.replace(a, b)
     open(path, 'w', encoding='utf-8').write(h)
+
+# 暫譯的 NPC 名稱換成 Wowhead 正式中文名
+NPCFIX = [('npc:"莫賓·光殤（暫譯）"','npc:"莫賓‧光寂"'),('npc:"亡靈衛兵克里斯托夫（暫譯）"','npc:"亡靈衛兵克里斯多夫"'),
+ ('npc:"塔比薩·織心（暫譯）"','npc:"塔比薩‧織心者"'),('npc:"大法師莫德拉的影像（暫譯）"','npc:"大法師莫德菈的影像"'),
+ ('npc:"梅莉莎拉（暫譯）"','npc:"梅里薩拉"'),('npc:"雷克西·銅爪（暫譯）"','npc:"瑞克希‧銅鉗"'),
+ ('n:"黑喉袋子",lv:60,xp:6600,npc:"艾薩拉的 NPC（Wowhead 未標名稱）"','n:"黑喉袋子",lv:60,xp:6600,npc:"艾卡爾"')]
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    for a, b in NPCFIX: h = h.replace(a, b)
+    open(path, 'w', encoding='utf-8').write(h)
