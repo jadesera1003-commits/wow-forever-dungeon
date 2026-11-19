@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: DQNames 副本任務查詢・中文名稱掃描
+## Notes: 掃描物品、任務、NPC 的中文名稱，供「副本任務查詢」網站使用
+## Version: 0.3.5
+## SavedVariables: DQNamesDB
+
+IDs.lua
+Core.lua
