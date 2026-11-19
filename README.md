@@ -56,3 +56,10 @@ python3 tools/build/apply_dq.py index.html claude-artifact/index.html
 - 每頁間隔約 2.5 秒，一次最多 8–9 頁。
 - 遇到人機驗證（Human Verification）就停，不要繞過；等 30–60 分鐘，或在瀏覽器手動驗證。
 - 爬到的結果要馬上存進 `data/`，再推上 GitHub，避免遺失。
+
+## 深度資料（2026-11-19）
+- `data/quests/deep_*.json`、`deep_heads_*.json`：每個任務的 `[前置[], 後續解鎖[], 固定獎勵[], 擇一獎勵[], 任務目標]`，共 431 個（含系列源頭）。
+- `data/items/reward_items.json`：任務獎勵物品 `[名稱, 品質, "部位 類型"]`。名稱是 `[English]` 的表示 Wowhead 還沒有中文，等 DQNames 掃描補。
+- `tools/build/patch_deep_ui.py`：在任務卡片加上「任務目標／任務獎勵／後續解鎖」區塊（只需跑一次）。
+- `tools/build/add_deep.py`：把深度資料注入網站（可重複執行）；後續解鎖的重要程度標籤在檔案內的 `TAG`／`NOTE` 手動維護。
+- `tools/build/fix_review.py`：套用 `review_notes.md` 的分類修正。
