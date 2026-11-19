@@ -20,16 +20,16 @@ JS = r'''
         const t = document.createElement("div"); t.className = "ft";
         t.textContent = "🎁 第 " + (i + 1) + " 步「" + qs.s[i][1] + "」" + (npc ? "交給 " + npc : "") + (w ? "・" + w : "");
         r.appendChild(t);
-        const ids = (g || []).concat(c || []);
-        if (ids.length){
-          const w2 = add(r, "rg", ""); if (c && c.length) add(w2, "rl", g && g.length ? "給＋擇一" : "擇一");
+        [[g, "固定給"], [c, "擇一"]].forEach(([ids, lab]) => {
+          if (!ids || !ids.length) return;
+          const w2 = add(r, "rg", ""); add(w2, "rl", lab);
           ids.forEach(id => { const it = RIT[id]; const a = document.createElement("a");
             a.className = "ri q" + (it ? it[1] : 1); a.href = "https://www.wowhead.com/forever/tw/item=" + id; a.target = "_blank"; a.rel = "noopener";
             a.textContent = it ? it[0].replace(/^\[(.*)\]$/, "$1") : ("物品 #" + id);
             if (it && it[2]){ const s = document.createElement("span"); s.className = "rt"; s.textContent = it[2]; a.appendChild(s); }
             const ok = rewUse(it && it[2], q.lv); if (ok === false) a.classList.add("no"); else if (ok === true) a.classList.add("ok");
             w2.appendChild(a); });
-        }
+        });
       });
       if (!mine) add(b, "sn", "這一步只給經驗，物品獎勵在後面");
     } else if (!mine) add(b, "sn", "整串沒有物品獎勵（只有經驗）");

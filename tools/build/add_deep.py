@@ -43,8 +43,11 @@ def objective(v):
     t = v[4]
     parts = t.split(' ', 1)
     t = parts[1] if len(parts) > 1 else ''
+    t = re.sub(r'\s*（\s*\d+\s*）', '', t)
     t = re.sub(r'\s*(已提供物品：.*|（已提供）.*)$', '', t).strip()
-    return t[:90]
+    t = t.replace('&lt;', '<').replace('&gt;', '>')
+    if '。' in t: t = t[:t.rindex('。') + 1]
+    return t[:110]
 
 for path in [P('index.html'), P('claude-artifact', 'index.html')]:
     if not os.path.exists(path):
