@@ -22,6 +22,9 @@ FIX = [
   '{d:"ubrs",c:"inside",n:"監護者",lv:60,xp:6600,npc:"奧比",w:"副本內",note:"副本內接，要到冬泉谷交給哈爾琳",side:"B",id:5160}'),
  ('w:"副本內・需要聖契物品",side:"B",id:7485}',
   'w:"副本內・需要聖契物品",note:"聯盟要先做「精靈的傳說」（找泰謬斯·尋夢者）才接得到",side:"B",id:7485}'),
+
+ ('reason:"要先在副本裡做完哥沙克那幾步、回奧格瑪報告索爾，得再打一趟",side:"B",id:4003}', 'reason:"要先在副本裡做完哥沙克那幾步、回奧格瑪報告索爾，得再打一趟",side:"H",id:4003}'),
+ ('reason:"救出公主之後的回報任務，接在「拯救公主」後面",side:"B",id:4004}', 'reason:"救出公主之後的回報任務，接在「拯救公主」後面",side:"H",id:4004}'),
 ]
 for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read(); n = 0
