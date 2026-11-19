@@ -94,6 +94,14 @@ def build(site, meta):
                     w = z + (' (%s, %s)' % (co[0], co[1]) if co and co != [0, 0] else '')
                 later.append([i, npc, w, g, c]); used |= set(map(str, g + c))
         out_only = all(in_inst(ids[i]) is False for i in range(p + 1, len(ids)))
+        # 「未列入」的步驟改用實際意思標示：副本外完成／下一趟副本
+        for i, st in enumerate(steps):
+            if st[3] == 'skip' or (st[3] == '' and i > p):
+                ii = in_inst(ids[i])
+                if i in again: st[3] = 'next'
+                elif ii is False: st[3] = 'out'
+                elif ii and i > p: st[3] = 'inside2'
+                elif st[3] == 'skip': st[3] = ''
         QS[qid] = {'p': p, 's': steps, 'r': later, 'a': again, 'o': 1 if out_only else 0}
     # 同一副本裡，系列後面的步驟併進最前面那一步的卡片
     for qid in site:
