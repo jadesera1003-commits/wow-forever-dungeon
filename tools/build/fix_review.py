@@ -108,7 +108,7 @@ SRC2 = [
  ('src:{q:"A Recipe for Death（任務鏈）",npc:"NPC 待查",w:"Wowhead 尚未標出起點",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"}',
   'src:{q:"致命配方（3 步）",npc:"藥劑師倫弗利爾",w:"提里斯法林地・布瑞爾",path:"致命配方 ×3（倫弗利爾 ↔ 幽暗城的大藥劑師法拉尼爾）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}'),
  ('src:{q:"Rear Guard Patrol（兩段）",npc:"NPC 待查",w:"提里斯法林地",path:"要先打掉提里斯法林地的 13 級精英 Riptear",warn:"Forever 正式上線後新增的前置，原本試算表寫可直接接"}',
-  'src:{q:"巡查後方（2 步）",npc:"亡靈衛兵林奈",w:"提里斯法林地・布瑞爾",path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}'),
+  'src:{q:"巡查後方（2 步）",npc:"亡靈衛兵林奈",w:"提里斯法林地・布瑞爾",path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",note2:"Wowhead 任務頁沒列這個前置，已在遊戲內確認需要"}'),
 ]
 for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
@@ -121,4 +121,9 @@ NP_NEW = '{d:"rfk-ruin",c:"direct",n:"新的瘟疫",en:"The New Plague",npc:"薩
 for p in ['index.html', 'claude-artifact/index.html']:
     path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
     h = NP_OLD.sub(lambda m: NP_NEW, h)
+    open(path, 'w', encoding='utf-8').write(h)
+
+for p in ['index.html', 'claude-artifact/index.html']:
+    path = os.path.join(ROOT, p); h = open(path, encoding='utf-8').read()
+    h = h.replace('path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，是玩家回報的"}', 'path:"巡查後方 → 巡查後方（第 2 步要打 13 級精英）→ 本任務",warn:"Wowhead 任務頁沒列這個前置，已在遊戲內確認需要"}')
     open(path, 'w', encoding='utf-8').write(h)
