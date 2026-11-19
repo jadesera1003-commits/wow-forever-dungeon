@@ -26,6 +26,7 @@ JS = r'''
         const c = document.createElement("span"); c.className = "tag t-" + tag; c.textContent = UNL_TAG[tag] || "後續"; line.appendChild(c);
         const a = document.createElement("a"); a.href = "https://www.wowhead.com/forever/tw/quest=" + id; a.target = "_blank"; a.rel = "noopener"; a.textContent = n; line.appendChild(a);
         if (note){ const s = document.createElement("span"); s.className = "un"; s.textContent = note; line.appendChild(s); }
+        if (tag === "main" && QFOLD[id] && QX[id] && QX[id].o){ const s = document.createElement("div"); s.className = "uo"; s.textContent = QX[id].o; u.appendChild(s); }
       });
       el.appendChild(u);
     }

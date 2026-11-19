@@ -53,8 +53,8 @@ def rewards(qid):
     if qid in DEEP: return DEEP[qid][2], DEEP[qid][3]
     return [], []
 
-def build(site):
-    QS, used = {}, set()
+def build(site, meta):
+    QS, used, FOLD = {}, set(), {}
     for qid in site:
         s = SER.get(qid)
         if not s: continue
@@ -73,7 +73,8 @@ def build(site):
         for i, x in enumerate(ids):
             n = title(x) or (names[i] if names else '') or NAMES.get(x) or ('任務 #' + x)
             g, c = rewards(x)
-            steps.append([int(x), n, 1 if (g or c) else 0])
+            tag = meta[x][1] if x in meta and meta[x][0] == meta[qid][0] else ''
+            steps.append([int(x), n, 1 if (g or c) else 0, tag])
         later = []
         cz = s[2]
         left = in_inst(qid) is False or bool(cz and cz[0] not in INST and cz[1] not in (None, [0, 0]))
@@ -94,22 +95,48 @@ def build(site):
                 later.append([i, npc, w, g, c]); used |= set(map(str, g + c))
         out_only = all(in_inst(ids[i]) is False for i in range(p + 1, len(ids)))
         QS[qid] = {'p': p, 's': steps, 'r': later, 'a': again, 'o': 1 if out_only else 0}
-    return QS, used
+    # 同一副本裡，系列後面的步驟併進最前面那一步的卡片
+    for qid in site:
+        s = SER.get(qid)
+        if not s or qid not in meta or meta[qid][1] == 'skip': continue
+        ids = [str(x) for x in s[0]]
+        if qid not in ids: continue
+        for x in ids[:ids.index(qid)]:
+            if x in meta and meta[x][0] == meta[qid][0] and meta[x][1] != 'skip' and side_ok(meta[x][2], meta[qid][2]):
+                FOLD[qid] = int(x); break
+    # 沒有系列表的：用「解鎖」關係（A 做完解鎖 B，兩個都在同一副本）
+    for a, v in DEEP.items():
+        if a not in meta or meta[a][1] == 'skip': continue
+        for b in map(str, v[1]):
+            if b in meta and b not in FOLD and meta[b][0] == meta[a][0] and meta[b][1] != 'skip' and side_ok(meta[a][2], meta[b][2]) and str(FOLD.get(a, '')) != b:
+                FOLD[b] = int(FOLD.get(a, a))
+    return QS, used, FOLD
+
+def side_ok(a, b):
+    return a == b or 'B' in (a, b)
 
 for path in [P('index.html'), P('claude-artifact', 'index.html')]:
     h = open(path, encoding='utf-8').read()
     site = set(re.findall(r',id:(\d+)', h))
-    QS, used = build(site)
+    meta = {}
+    for L in h.split('\n'):
+        if not L.startswith('  {d:'): continue
+        m = re.search(r',id:(\d+)[,}]', L)
+        if not m: continue
+        meta[m.group(1)] = (re.match(r'\s*\{d:"([^"]+)"', L).group(1), re.search(r',c:"([^"]+)"', L).group(1),
+                            (re.search(r'side:"(\w)"', L) or [0, 'H'])[1])
+    QS, used, FOLD = build(site, meta)
     m = re.search(r'const RIT = (\{.*?\});\n', h)
     rit = json.loads(m.group(1)) if m else {}
     for k in used:
         if k in ITEMS: rit[k] = ITEMS[k]
     h = h.replace(m.group(0), 'const RIT = ' + json.dumps(rit, ensure_ascii=False, separators=(',', ':')) + ';\n') if m else h
-    blob = '/*QS-BEGIN*/\nconst QS = ' + json.dumps(QS, ensure_ascii=False, separators=(',', ':')) + ';\n/*QS-END*/\n'
+    blob = ('/*QS-BEGIN*/\nconst QS = ' + json.dumps(QS, ensure_ascii=False, separators=(',', ':')) +
+            ';\nconst QFOLD = ' + json.dumps(FOLD, separators=(',', ':')) + ';\n/*QS-END*/\n')
     if '/*QS-BEGIN*/' in h:
         h = re.sub(r'/\*QS-BEGIN\*/.*?/\*QS-END\*/\n', lambda _: blob, h, flags=re.S)
     else:
         h = h.replace('/*QX-END*/\n', '/*QX-END*/\n' + blob, 1)
     open(path, 'w', encoding='utf-8').write(h)
     print(os.path.relpath(path, ROOT), 'series', len(QS), 'with later reward', sum(1 for v in QS.values() if v['r']),
-          'run again', sum(1 for v in QS.values() if v['a']))
+          'run again', sum(1 for v in QS.values() if v['a']), 'folded', len(FOLD))

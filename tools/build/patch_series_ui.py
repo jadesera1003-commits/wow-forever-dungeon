@@ -7,11 +7,15 @@ JS = r'''
     const b = document.createElement("div"); b.className = "blk ser";
     add(b, "lab", "系列進度　第 " + (qs.p + 1) + " 步／共 " + qs.s.length + " 步");
     const ch = add(b, "chain", "");
-    qs.s.forEach(([id, n, rw], i) => {
+    qs.s.forEach(([id, n, rw, tg], i) => {
       if (i) ch.append(" → ");
       const s = document.createElement(i === qs.p ? "b" : "span"); s.textContent = (i === qs.p ? "▶" : "") + n + (rw && i > qs.p ? " 🎁" : "");
+      if (tg && i !== qs.p){ const t = document.createElement("small"); t.className = "stg"; t.textContent = STEP_TAG[tg] || ""; s.appendChild(t); }
       if (i < qs.p) s.className = "done";
       ch.appendChild(s);
+    });
+    qs.s.forEach(([id, n, rw, tg], i) => {
+      if (i !== qs.p && tg && tg !== "skip" && QFOLD[id] && QX[id] && QX[id].o) add(b, "stp", "第 " + (i + 1) + " 步" + (STEP_TAG[tg] || "") + "：" + QX[id].o);
     });
     const mine = qx && (qx.g || qx.c);
     if (qs.r.length){
